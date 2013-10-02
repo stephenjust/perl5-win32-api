@@ -149,9 +149,10 @@ sub cflags {
     my $dlib = $self->SUPER::cflags(@_);
     my $pos = index($dlib,'CCFLAGS = ',0);
     die "bad CCFLAGS match" if $pos == -1;
-    $dlib = substr($dlib, 0, $pos+length('CCFLAGS = '))
+    my $len = $pos+length('CCFLAGS = ');
+    $dlib = substr($dlib, 0, $len)
         .main::GS_flag()
-        .substr($dlib, $pos+length('CCFLAGS = '), length($dlib)-$pos+length('CCFLAGS = '));
+        .substr($dlib, $len, length($dlib)-$len);
     my @defs = $dlib =~ /(?:-|\/)D\w+/g;
     return $dlib.'PERL_DEFINES = '.join(' ', @defs)."\n";
 }
