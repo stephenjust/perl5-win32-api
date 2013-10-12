@@ -811,6 +811,7 @@ DESTROY(self)
 PREINIT:
     SV * retsv;
     DWORD error;
+    DWORD error2;
 PPCODE:
     error = GetLastError(); //dont let DESTROY screw up a new
     PUSHMARK(SP);
@@ -821,9 +822,9 @@ PPCODE:
     //call_pv("Win32::API::Callback::IATPatch::Unpatch", 0);
     retsv = POPs;
     if(!sv_true(retsv) /*ERROR_NO_MORE_ITEMS means it was already unpatched*/
-       && GetLastError() != ERROR_NO_MORE_ITEMS){
+       && (error2 = GetLastError()) != ERROR_NO_MORE_ITEMS){
         croak("%s: Failed to unpatch DLL, error number %u ",
-              "Win32::API::Callback::IATPatch::DESTROY", GetLastError());
+              "Win32::API::Callback::IATPatch::DESTROY", error2);
     }
     SetLastError(error);
 

@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( %Known %PackSize %Modifier %Pointer $VERSION @ISA );
 
-$VERSION = '0.68';
+$VERSION = '0.69';
 
 use Carp;
 BEGIN{

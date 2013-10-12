@@ -15,6 +15,9 @@ require './Test.pm';
 my $is_64bit_build = ($Config{ptrsize} == 8);
 my $is_msvc_compiler = ($Config{cc} =~ /cl/);
 
+#maybe this CC will banned in the future due to SEGV in DllMain
+#die "Mingw 3.4.5 will generate unloadble DLLs, upgrade your GCC"
+#     if index($Config{gccversion}, '3.4.5 (mingw-vista special r3)') != -1);
 
 use ExtUtils::MakeMaker;
 WriteMakefile1(

@@ -31,6 +31,9 @@ diag("This might crash");
 
 #$callback->{'code'}, no other way to do it ATM, even though not "public"
 my $hnd = $function->Call(0, 0, $callback->{'code'}, 0, 0, 0);
+sleep 1; #try to stop a CPANTesters fail report 596da136-6c02-1014-8ad3-3babd0345282
+#which looks like a crash, if global destruction in Perl happen, the function
+#stub might be freed before the thread runs, so add sleep
 ok($hnd, "CreateThread worked");
 
 #this test is badly designed, it doesn't check whether the error message
