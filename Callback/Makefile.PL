@@ -19,6 +19,14 @@ sub GS_flag {
     }
 }
 
+sub no_stackprotector {
+    if(!$is_msvc_compiler && $is_64bit_build) {
+        return ' -fno-stack-protector ';
+    } else {
+        return '';
+    }
+}
+
 package MY;
 
 sub cflags {
@@ -30,6 +38,7 @@ sub cflags {
     $dlib = substr($dlib, 0, $len)
         .main::GS_flag()
         .substr($dlib, $len, length($dlib)-$len);
+    $dlib =~ s/(^OPTIMIZE = .+)$/$1 ${\main::no_stackprotector()}/m;
     return $dlib;
 }
 

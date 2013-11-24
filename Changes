@@ -1,5 +1,8 @@
 History of Win32::API perl extension.
 
+2013-11-24  Win32::API v0.76_05    bulk88
+   - Added, Cygwin 64 bit support RT #90597
+
 2013-10-12  Win32::API v0.76_04    bulk88
    - Fixed, a lie in the POD for Type.pm, about the Type database
    - Fixed, using Perl 5.6/MakeMaker < ~6.25 caused Makefile.PL to generate

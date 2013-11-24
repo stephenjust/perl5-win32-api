@@ -19,6 +19,10 @@
 */
 #ifdef __CYGWIN__
 #  define _alloca(size) __builtin_alloca(size)
+/* Cygwin-64 doesn't define WIN64 */
+#  if defined(_WIN64) && !defined(WIN64)
+#    define WIN64
+#  endif
 #endif
 
 /* old (5.8 ish) strawberry perls/Mingws somehow dont ever include malloc.h from

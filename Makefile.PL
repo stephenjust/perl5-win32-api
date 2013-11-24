@@ -134,6 +134,14 @@ call_i686$(OBJ_EXT): call_i686.c API.h
 ';
 }
 
+sub no_stackprotector {
+    if(!$is_msvc_compiler && $is_64bit_build) {
+        return ' -fno-stack-protector ';
+    } else {
+        return '';
+    }
+}
+
 package MY; #subs below use SUPER::, subs above use main:: vars
 
 sub post_constants {
@@ -156,6 +164,9 @@ sub cflags {
     $dlib = substr($dlib, 0, $len)
         .main::GS_flag()
         .substr($dlib, $len, length($dlib)-$len);
+#this is for Callback.xs, on Cygwin, $(PASTHRU) is used to override on cmd line
+#OPTIMIZE macro from the parent makefile (this one)
+    $dlib =~ s/(^OPTIMIZE = .+)$/$1 ${\main::no_stackprotector()}/m;
     my @defs = $dlib =~ /(?:-|\/)D\w+/g;
     return $dlib.'PERL_DEFINES = '.join(' ', @defs)."\n";
 }

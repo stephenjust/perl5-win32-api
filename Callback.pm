@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( $VERSION @ISA $Stage2FuncPtrPkd );
 
-$VERSION = '0.76_04';
+$VERSION = '0.76_05';
 
 
 require Exporter;      # to export the constants to the main:: space
@@ -45,7 +45,7 @@ BEGIN {
     #Win64 added in 5.7.3
     eval "sub IVSIZE () { ".length(pack($] >= 5.007003 ? 'J' : 'I' ,0))." }";
     #what kind of stack processing/calling convention/machine code we needed
-    eval "sub ISX64 () { ".(index($Config{'archname'},"MSWin32-x64") == 0 ?  1 : 0)." }";
+    eval "sub ISX64 () { ".(Win32::API::PTRSIZE() == 8 ?  1 : 0)." }";
     eval 'sub OPV () {'.$].'}';
     sub OPV();
     sub CONTEXT_XMM0();
