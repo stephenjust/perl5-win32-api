@@ -30,6 +30,8 @@ $test_dll = Win32::API::Test::find_test_dll();
 diag('API test dll found at (' . $test_dll . ')');
 ok(-e $test_dll, 'found API test dll');
 
+my $cygwin = $^O eq 'cygwin';
+
 #pointer types
 {
 #$Win32::API::DEBUG = 1;
@@ -135,10 +137,12 @@ $pass = $pass && unpack(PTR_LET(), $hnd) == 4000;
 ok($pass, 'GetHandle from func pointer using letter interface operates correctly');
 
 $function2 = new Win32::API::More(undef, 2, 'GetHandle', 'P', 'I');
+#$^E is not really implemented on Cygwin
+my $err = $cygwin ? Win32::GetLastError() : $^E+0;
 eval {
     $result = $function2->Call($hnd);
-};
-ok($@ && ! defined $function2, 'Can\'t create a Win32::API obj to func ptr 2');
+};#ERROR_NOACCESS
+ok($@ && ! defined $function2 && $err == 998, 'Can\'t create a Win32::API obj to func ptr 2');
 
 }
 

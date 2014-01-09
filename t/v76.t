@@ -11,9 +11,10 @@ use Test::More;
 use Math::Int64 qw( hex_to_int64 );
 use Win32::API::Test;
 
-plan tests => 17;
+plan tests => 20;
 use vars qw($function $result $return $test_dll $dllhandle);
 use Win32::API 'IsBadReadPtr';
+use Win32API::File qw(SetErrorMode SEM_FAILCRITICALERRORS);
 use Win32;
 
 $test_dll = Win32::API::Test::find_test_dll();
@@ -40,6 +41,20 @@ is($result, 5, 'sum_shorts_ref() correctly modifies its ref argument');
 ok(!(Import Win32::API::More($test_dll, 'void __stdcall ThisDoesntExist()'))
    && $^E == 127 #ERROR_PROC_NOT_FOUND
     , "Import() on non existant func failed");
+ok(!(Import Win32::API::More('dlldoesntexist8132y49.dll', 'void __stdcall ThisDoesntExist()'))
+   && $^E == 126  #ERROR_MOD_NOT_FOUND
+    , "Import() on non existant dll failed");
+
+{
+    my $wrong_arch_dll_name = Win32::API::Test::find_test_dll(
+        Win32::API::Test::is_perl_64bit() ? 'API_test.dll' : 'API_test64.dll');
+    ok(-e $wrong_arch_dll_name, 'found wrong architecture API test dll');
+    my $olderrmode = SetErrorMode(SEM_FAILCRITICALERRORS); #don't hang with a dialog box
+    $function = new Win32::API::More($wrong_arch_dll_name, 'HANDLE __stdcall GetGetHandle()');
+    ok(!defined($function) && Win32::GetLastError() == 193 #ERROR_BAD_EXE_FORMAT
+       , "wrong architecture DLL load has correct GLR");
+    SetErrorMode($olderrmode);
+}
 
 {
 $function = new Win32::API::More($test_dll, 'HANDLE __stdcall GetGetHandle()');

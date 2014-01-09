@@ -1,5 +1,17 @@
 History of Win32::API perl extension.
 
+2014-01-09  Win32::API v0.77    bulk88
+   - Improved, hardened tests for error code returned by API/More's new()
+   - Improved, new() is more resistent to future changes in LastError clearing
+     behaviour in MS's Windows API
+   - Fixed, in some rare cases with very wrong parameters being passed to new()
+     no error code was set
+   - Deprecated, Win32::API uses Win32 error codes, not C/Unix error codes,
+     assigning low numbered Win32 error codes to $!, results in $!
+     stringification to Unix descriptions, not Win32, therefore only $^E and
+     GetLastError may be used to retrieve the error code of a failed API
+     constructor call
+
 2013-11-24  Win32::API v0.76_05    bulk88
    - Added, Cygwin 64 bit support RT #90597
 
@@ -8,7 +20,7 @@ History of Win32::API perl extension.
    - Fixed, using Perl 5.6/MakeMaker < ~6.25 caused Makefile.PL to generate
      a syntax erroring makefile
    - Added, beginnings of MSYS compatibility (Thanks to Sebastian Schuberth)
-   - Fixed, many POS typos by David Steinbrunner
+   - Fixed, many POD typos by David Steinbrunner
    - Fixed, removed use of "package ExtUtils::MM_Win32;" in Makefile.PLs for
      MSYS compatibility
    - Fixed, substr bug by Sebastian Schuberth

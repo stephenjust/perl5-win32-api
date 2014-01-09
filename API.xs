@@ -702,7 +702,7 @@ CODE:
 
 #endif
 
-# todo, disable this for release
+#ifdef ISDEV
 IV
 _xxSetLastError(in)
     IV in
@@ -716,6 +716,7 @@ CODE:
 OUTPUT:
     RETVAL
 
+#endif
 
 # xsub to attach a hidden SV in RV inside to the target SV of RV outside
 # both params must be references
@@ -749,14 +750,15 @@ PREINIT:
     SV * inside;
 CODE:
     if(items != 1)
+    croak:
         croak_xs_usage(cv,  "reference");
     outside = *SP;
     if(!SvROK(outside))
-        croak_xs_usage(cv,  "reference");
+        goto croak;
     outside = SvRV(outside);
     inside = getMgSV(aTHX_ outside);
     if(!inside)
-        croak_xs_usage(cv,  "reference");
+        goto croak;
     *SP = sv_2mortal(newRV_inc(inside));
     /* no PUTBACK, got 1 item, returning 1 item */
     return;

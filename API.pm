@@ -77,7 +77,7 @@ my %Procedures = ();
 # dynamically load in the API extension module.
 # BEGIN required for constant subs in BOOT:
 BEGIN {
-    $VERSION = '0.76_05';
+    $VERSION = '0.77';
     bootstrap Win32::API;
 }
 
@@ -120,7 +120,7 @@ sub new {
         #### if the dll can't be loaded, set $! to Win32's GetLastError()
         if (!$hdll) {
             $! = Win32::GetLastError();
-            DEBUG "FAILED Loading library '$dll': $!\n";
+            DEBUG "FAILED Loading library '$dll': $^E\n";
             return undef;
         }
     }
@@ -137,6 +137,7 @@ sub new {
          $ccnum) = parse_prototype($class, $proc);
         if( ! $proc ){
             Win32::API::FreeLibrary($hdll) if $freedll;
+            Win32::SetLastError(ERROR_INVALID_PARAMETER);
             return undef;
         }
         $proto = 1;
@@ -180,11 +181,12 @@ sub new {
             $hproc = Win32::API::GetProcAddress($hdll, $tproc);
         }
     
-        #### ...if all that fails, set $! accordingly
+        #### ...if all that fails, give up, $! setting is back compat, $! is deprecated
         if (!$hproc) {
-            $! = Win32::GetLastError();
-            DEBUG "FAILED GetProcAddress for Proc '$proc': $!\n";
+            my $err = $! = Win32::GetLastError();
+            DEBUG "FAILED GetProcAddress for Proc '$proc': $^E\n";
             Win32::API::FreeLibrary($hdll) if $freedll;
+            Win32::SetLastError($err);
             return undef;
         }
         DEBUG "GetProcAddress('$proc') = '$hproc'\n";
@@ -206,7 +208,6 @@ sub new {
         DEBUG "FAILED This function has too many parameters (> ~65535) \n";
         Win32::API::FreeLibrary($hdll) if $freedll;
         Win32::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        $! = Win32::GetLastError();
         return undef;
     }
     #### ok, let's stuff the object
@@ -647,6 +648,11 @@ Win32::API - Perl Win32 API Import Facility
   $function = Win32::API::More->new(
       'mydll', 'int sum_integers(int a, int b)'
   );
+  #### $^E is non-Cygwin only
+  die "Error: $^E" if ! $function;
+  #### or on Cygwin and non-Cygwin
+  die "Error: ".(Win32::FormatMessage(Win32::GetLastError())) if ! $function;
+  ####
   $return = $function->Call(3, 2);
 
   #### Method 2: with prototype and your function pointer
@@ -655,6 +661,7 @@ Win32::API - Perl Win32 API Import Facility
   $function = Win32::API::More->new(
       undef, 38123456, 'int name_ignored(int a, int b)'
   );
+  die "Error: $^E" if ! $function; #$^E is non-Cygwin only
   $return = $function->Call(3, 2);
 
   #### Method 3: with parameter list 
@@ -663,6 +670,7 @@ Win32::API - Perl Win32 API Import Facility
   $function = Win32::API::More->new(
       'mydll', 'sum_integers', 'II', 'I'
   );
+  die "Error: $^E" if ! $function; #$^E is non-Cygwin only
   $return = $function->Call(3, 2);
      
   #### Method 4: with parameter list and your function pointer
@@ -671,14 +679,16 @@ Win32::API - Perl Win32 API Import Facility
   $function = Win32::API::More->new(
       undef, 38123456, 'name_ignored', 'II', 'I'
   );
+  die "Error: $^E" if ! $function; #$^E is non-Cygwin only
   $return = $function->Call(3, 2);
   
   #### Method 5: with Import (slightly faster than ->Call)
  
   use Win32::API;
-  Win32::API::More->Import(
+  $function = Win32::API::More->Import(
       'mydll', 'int sum_integers(int a, int b)'
-  );  
+  );
+  die "Error: $^E" if ! $function; #$^E is non-Cygwin only
   $return = sum_integers(3, 2);
 
 
@@ -788,7 +798,8 @@ and must supply item 2.
 This parameter is optional, most people should skip it, skip does not mean
 supplying undef. Supply a function pointer in the format of number 1234, not
 string "\x01\x02\x03\x04". Undef will be returned if the pointer is not
-readable, GetLastError will be ERROR_NOACCESS.
+readable, L<Win32::GetLastError|Win32/Win32::GetLastError()>/L<perlvar/"$^E">
+will be C<ERROR_NOACCESS>.
 
 =item 3.
 
@@ -825,7 +836,8 @@ The name of the library from which you want to import the function.
 This parameter is optional, most people should skip it, skip does not mean
 supplying undef. Supply a function pointer in the format of number C<1234>,
 not string C<"\x01\x02\x03\x04">. Undef will be returned if the pointer is not
-readable, GetLastError will be ERROR_NOACCESS.
+readable, L<Win32::GetLastError|Win32/Win32::GetLastError()>/L<perlvar/"$^E">
+will be C<ERROR_NOACCESS>.
 
 =item 3.
 The name of the function (as exported by the library) or for function pointers
@@ -886,8 +898,8 @@ a couple of directories, including:
 
 =back
 
-So, you don't have to write F<C:\windows\system\kernel32.dll>; 
-only F<kernel32> is enough:
+You may, but don't have to write F<C:\windows\system\kernel32.dll>; or
+F<kernel32.dll>, only F<kernel32> is enough:
 
     $GetTempPath = new Win32::API::More('kernel32', ...
 
@@ -903,17 +915,19 @@ It must be written exactly as it is exported
 by the library (case is significant here).
 If you are using Windows 95 or NT 4.0, you can use the B<Quick View> 
 command on the DLL file to see the function it exports. 
-Remember that you can only import functions from 32 bit DLLs:
+Remember that you can only import functions from 32 or 64 bit DLLs:
 in Quick View, the file's characteristics should report
 somewhere "32 bit word machine"; as a rule of thumb,
 when you see that all the exported functions are in upper case,
-the DLL is a 16 bit one and you can't use it. 
+the DLL is a 16 bit one and you can't use it. You also can not load a 32 bit
+DLL into a 64 bit Perl, or vice versa. If you try, C<new>/C<Import> will fail
+and C<$^E> will be C<ERROR_BAD_EXE_FORMAT>.
 If their capitalization looks correct, then it's probably a 32 bit
 DLL. If you have Platform SDK or Visual Studio, you can use the Dumpbin
-tool. Call it as "dumpbin /exports name_of_dll.dll" on the command line.
+tool. Call it as C<dumpbin /exports name_of_dll.dll> on the command line.
 If you have Mingw GCC, use objdump as
-"objdump -x name_of_dll.dll > dlldump.txt" and search for the word exports in
-the very long output.
+C<objdump -x name_of_dll.dll E<gt> dlldump.txt> and search for the word exports
+in the very long output.
 
 Also note that many Win32 APIs are exported twice, with the addition of
 a final B<A> or B<W> to their name, for - respectively - the ASCII 
@@ -1059,14 +1073,22 @@ typedef for unsigned long, so our return type will be B<N>:
 
 Now the line is complete, and the GetTempPath() API is ready to be used
 in Perl. Before calling it, you should test that $GetTempPath is 
-C<defined>, otherwise either the function or the library could not be
-loaded; in this case, C<$!> will be set to the error message reported 
-by Windows.
+L<perlfunc/defined>, otherwise errors such as the function or the library could
+not be loaded or the C prototype was unparsable happened, and no object was
+created. If the return value is undefined, to get detailed error status, use
+L<perlvar/"$^E"> or L<Win32::GetLastError|Win32/Win32::GetLastError()>. C<$^E>
+is slower than C<Win32::GetLastError> and useless on Cygwin, but C<$^E> in
+string context provides a readable description of the error. In numeric context,
+C<$^E> is equivelent to C<Win32::GetLastError>. C<Win32::GetLastError> always
+returns an integer error code. You may use
+L<Win32::FormatMessage|Win32/Win32::FormatMessage()> to convert an integer error
+code to a readable description on Cygwin and Native builds of Perl.
+
 Our definition, with error checking added, should then look like this:
 
     $GetTempPath = new Win32::API::More('kernel32', 'GetTempPath', 'NP', 'N');
     if(not defined $GetTempPath) {
-        die "Can't import API GetTempPath: $!\n";
+        die "Can't import API GetTempPath: $^E\n";
     }
 
 =back
@@ -1289,11 +1311,26 @@ does not exist if your Perl natively supports Quads (64 bit Perl for example).
 Takes 1 optional parameter, which is a true or false value to use or don't use
 Math::Int64, returns the old setting, which is a true or false value. If called
 without any parameters, returns current setting, which is a true or false value,
-without setting the option. As discussed in L</q>, if your not using Math::Int64
-you must supply/will receive 8 byte scalar strings for quads. For "in" params
-in Win32::API and Win32::API::More and "out" in Win32::API::Callback only,
-if the argument is a reference, it will automatically be treated as a
-Math::Int64 object without having to previously call this function.
+without setting the option. As discussed in L</q>, if you are not using
+Math::Int64 you must supply/will receive 8 byte scalar strings for quads.
+For "in" params in Win32::API and Win32::API::More and "out" in
+Win32::API::Callback only, if the argument is a reference, it will automatically
+be treated as a Math::Int64 object without having to previously call this
+function.
+
+=head2 VERBOSE DEBUGGING
+
+If using C<Win32::GetLastError> and C<$^E> does not reveal the problem with your
+use of Win32::API, you may turn on Win32::API's very verbose debugging mode as
+follows
+
+    BEGIN {
+        $Win32::API::DEBUG = 1;
+    }
+    use Win32::API;
+    $function = Win32::API::More->new(
+        'mydll', 'int sum_integers(int a, int b)'
+    );
 
 =head1 HISTORY
 
@@ -1351,6 +1388,14 @@ Added in 0.76_01
 =item Import returns an api obj on success, undef on failure, instead of 1 or 0
 
 Added in 0.76_02
+
+=item checking C<$!> for C<new>/C<Import> failure is broken and deprecated
+
+Starting in 0.76_06, due to many bugs with C<new> and C<Import> not setting
+L<perlvar/$!> or Win32 and C error codes overlapping and Win32 error codes being
+stringified as different C error codes, checking C<$!> is deprecated and the
+existing, partial setting of C<$!>, maybe removed in the future. Only check
+C<Win32::GetLastError()> or C<$^E> to find out why the call failed.
 
 =back
 

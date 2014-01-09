@@ -155,6 +155,10 @@ $(OBJECT) : Call.c
 ';
 }
 
+sub isdev {
+    return index(shift->{VERSION}, '_') == -1 ? '' :  ' -DISDEV ';
+}
+
 sub cflags {
     my($self) = shift;
     my $dlib = $self->SUPER::cflags(@_);
@@ -163,6 +167,7 @@ sub cflags {
     my $len = $pos+length('CCFLAGS = ');
     $dlib = substr($dlib, 0, $len)
         .main::GS_flag()
+        .isdev($self)
         .substr($dlib, $len, length($dlib)-$len);
 #this is for Callback.xs, on Cygwin, $(PASTHRU) is used to override on cmd line
 #OPTIMIZE macro from the parent makefile (this one)
