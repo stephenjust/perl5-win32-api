@@ -6,6 +6,10 @@
 *.obj
 *.pdb
 *.xsc
+Callback/dll.base
+Callback/dll.exp
+dll.base
+dll.exp
 Makefile
 Makefile.old
 blib

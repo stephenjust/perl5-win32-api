@@ -1,5 +1,8 @@
 History of Win32::API perl extension.
 
+2014-??-??  Win32::API v0.7?    bulk88
+   - Fixed, POD (khw, bulk88)
+
 2014-01-09  Win32::API v0.77    bulk88
    - Improved, hardened tests for error code returned by API/More's new()
    - Improved, new() is more resistent to future changes in LastError clearing
