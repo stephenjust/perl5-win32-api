@@ -2,12 +2,19 @@
 use strict;
 use warnings;
 
+BEGIN { eval{ require threads} }
 use Win32::API::Callback;
 use Win32::API::Test;
 use Test::More;
 use Config;
 
-plan tests => 1;
+if($^O eq 'cygwin'){
+    plan skip_all => 'Win32::API::Callback on Cygwin crashes during a fork';
+}
+else {
+    plan tests => 2;
+}
+
 
 # This test was originally useless without the Windows debugging heap, by
 # raising the alloc size to 50 MB, a call to the paging system is forced
@@ -15,7 +22,13 @@ plan tests => 1;
 # VirtualAlloced but freed Heap memory
 
 SKIP: {
-    skip("This Perl doesn't have fork", 1) if ! Win32::API::Test::can_fork();
+    skip("This Perl doesn't have fork", 2) if ! Win32::API::Test::can_fork();
+#a HeapAlloc block is not copied to a Cygwin Child Proc's address space
+#POSIX has no executable privilage enabled equivelent of malloc. HeapAlloc
+#has an exectuable option. Using Cygwin's mprotect on a Cygwin malloc
+#pointer seems too crude, since bytes from other blocks that aren't machine
+#code will be made executable in the same page as the ::Callback function
+
 
     # HeapBlock class is not public API
 
@@ -23,16 +36,18 @@ SKIP: {
     my $ptrobj = new Win32::API::Callback::HeapBlock 5000000;
     my $pid = fork();
     if ($pid) {
-        print "in parent\n";
+        diag("in parent\n");
         { #block to force destruction on scope leave
             undef($ptrobj);
         }
-        ok("didn't crash");
+        ok(1, "didn't crash parent");
+        waitpid $pid, 0;
     }
     else {
-        print "in child\n";
+        diag("in child\n");
         { #block to force destruction on scope leave
             undef($ptrobj);
         }
+        ok(1, "didn't crash child");
     }
 }

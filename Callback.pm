@@ -561,6 +561,18 @@ or 'WINAPIV'.
 
 See L<Win32::API/UseMI64>.
 
+=head1 KNOWN ISSUES
+
+=over 4
+
+=item *
+
+Callback is safe across a Win32 psuedo-fork. Callback is not safe across a
+Cygwin fork. On Cygwin, in the child process of the fork, a Segmentation Fault
+will happen if the Win32::API::Callback callback is is called.
+
+=back
+
 =head1 SEE ALSO
 
 L<Win32::API::Callback::IATPatch>
