@@ -627,7 +627,7 @@ STATIC void Call_body(pTHX_ const APICONTROL * const control, unsigned int rt_fl
     }
     /* if(rt_flags & NEEDS_POST_CALL_LOOP) */
 #ifdef WIN32_API_DEBUG
-   	printf("(XS)Win32::API::Call: returning to caller.\n");
+   	printf("(XS)Win32::API::Call: returning to caller t=%u.\n", control->out);
 #endif
 	/* #### NOW PUSH THE RETURN VALUE ON THE (PERL) STACK #### */
     SP = &(W32A_ST(ax_p)); /* XSprePUSH equivelent -1 not needed b/c always ret 1 elem*/
@@ -646,19 +646,29 @@ STATIC void Call_body(pTHX_ const APICONTROL * const control, unsigned int rt_fl
     //un/signed prefix is ignored unless implemented, T_FLAG_NUMERIC is removed in API.pm
     *SP = TARG;
     switch(control->out) {
-    case T_INTEGER:
     case T_NUMBER:
 #ifdef WIN32_API_DEBUG
-	   	printf("(XS)Win32::API::Call: returning %Id.\n", retval.l);
+	   	printf("(XS)Win32::API::Call: returning T_NUMBER %Id.\n", retval.l);
 #endif
         sv_setiv(TARG, retval.l);
         break;
-    case (T_INTEGER|T_FLAG_UNSIGNED):
     case (T_NUMBER|T_FLAG_UNSIGNED):
 #ifdef WIN32_API_DEBUG
-	   	printf("(XS)Win32::API::Call: returning %Iu.\n", retval.l);
+	   	printf("(XS)Win32::API::Call: returning %Iu.\n", retval.ul);
 #endif
-        sv_setuv(TARG, retval.l);
+        sv_setuv(TARG, retval.ul);
+        break;
+    case T_INTEGER:
+#ifdef WIN32_API_DEBUG
+	   	printf("(XS)Win32::API::Call: returning  T_INTEGER %d.\n", (int)retval.l);
+#endif
+        sv_setiv(TARG, (IV)(int)retval.l);
+        break;
+    case (T_INTEGER|T_FLAG_UNSIGNED):
+#ifdef WIN32_API_DEBUG
+	   	printf("(XS)Win32::API::Call: returning T_INTEGER|T_FLAG_UNSIGNED %u.\n", (unsigned int)retval.ul);
+#endif
+        sv_setuv(TARG, (UV)(unsigned int)retval.ul);
         break;
     case T_SHORT:
 #ifdef WIN32_API_DEBUG
@@ -668,9 +678,9 @@ STATIC void Call_body(pTHX_ const APICONTROL * const control, unsigned int rt_fl
         break;
     case (T_SHORT|T_FLAG_UNSIGNED):
 #ifdef WIN32_API_DEBUG
-	   	printf("(XS)Win32::API::Call: returning %hu.\n", retval.l);
+	   	printf("(XS)Win32::API::Call: returning %hu.\n", retval.ul);
 #endif
-        sv_setuv(TARG, (UV)(unsigned short)retval.l);
+        sv_setuv(TARG, (UV)(unsigned short)retval.ul);
         break;
 #ifdef T_QUAD
 #ifdef USEMI64
@@ -763,7 +773,7 @@ STATIC void Call_body(pTHX_ const APICONTROL * const control, unsigned int rt_fl
 #ifdef WIN32_API_DEBUG
 	   	printf("(XS)Win32::API::Call: returning numeric unsigned char %hu.\n", (unsigned char)retval.l);
 #endif
-        sv_setuv(TARG, (UV)(unsigned char)retval.l);
+        sv_setuv(TARG, (UV)(unsigned char)retval.ul);
         break;
     default:
         croak("Win32::API::Call: (internal error) unknown type %u\n", control->out);

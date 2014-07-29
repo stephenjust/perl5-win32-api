@@ -11,7 +11,7 @@ use Test::More;
 use Math::Int64 qw( hex_to_int64 );
 use Win32::API::Test;
 
-plan tests => 20;
+plan tests => 22;
 use vars qw($function $result $return $test_dll $dllhandle);
 use Win32::API 'IsBadReadPtr';
 use Win32API::File qw(SetErrorMode SEM_FAILCRITICALERRORS);
@@ -90,3 +90,9 @@ SKIP: {
        '::More::Import() with MI64 sum_quads_ref() returns the expected value');
     is($result, hex_to_int64("0x0200000000000001"), 'sum_quads_ref() correctly modifies its ref argument');
 }
+
+# Sum 2 shorts
+$function = new Win32::API::More($test_dll, 'short sum_shorts(short a, short b)');
+ok(defined($function), 'sum_shorts() function defined');
+
+is($function->Call(-1, 0), -1, 'function call with negative short arguments and return value (Call) #94906');

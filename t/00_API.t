@@ -12,7 +12,7 @@ use File::Spec;
 use Test::More;
 use Config;
 use Win32::API::Test;
-plan tests => 57;
+plan tests => 58;
 use vars qw($function $result $input $test_dll $ptr);
 
 SKIP: {
@@ -152,6 +152,7 @@ ok(defined($function), 'sum_integers() function defined');
 
 #diag("$function->{procname} \$^E=", $^E);
 is($function->Call(2, 3), 5, 'function call with integer arguments and return value (Call)');
+is($function->Call(-1, 0), -1, 'function call with negative integer arguments and return value (Call) #94906');
 
 # Sum 2 integers with ::Import
 ok(Import Win32::API($test_dll, 'int sum_integers(int a, int b)'), "Import() on sum_integers worked");

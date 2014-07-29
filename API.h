@@ -112,9 +112,11 @@ __declspec( naked )  unsigned __int64 rdtsc () {
 #endif
 
 #ifdef _WIN64
-typedef unsigned long long long_ptr;
+typedef long long long_ptr;
+typedef unsigned long long ulong_ptr;
 #else
-typedef unsigned long long_ptr;
+typedef long long_ptr;
+typedef unsigned long ulong_ptr;
 #endif
 
 #define T_VOID				0
@@ -163,6 +165,7 @@ union {
     short s;
 	char *p;
 	long_ptr l; // 4 bytes on 32bit; 8 bytes on 64bbit; not sure if it is correct
+	ulong_ptr ul;
 	float f;
 	double d;
 #ifdef T_QUAD
@@ -185,6 +188,7 @@ union {
     short s;
 	char *p;
 	long_ptr l; // 4 bytes on 32bit; 8 bytes on 64bbit; not sure if it is correct
+	ulong_ptr ul;
 	float f;
 	double d;
 #ifdef T_QUAD

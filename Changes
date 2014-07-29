@@ -1,8 +1,11 @@
 History of Win32::API perl extension.
 
-2014-??-??  Win32::API v0.7?    bulk88
+2014-07-29  Win32::API v0.78    bulk88
    - Fixed, POD (khw, bulk88)
    - Win32::API::Callback and Cygwin fork incompatibility noted
+   - Fixed, RT #94906, signed integral return values that were shorter than an
+     IV and whose value was negative, were returned as large unsigned numbers
+     in Perl
 
 2014-01-09  Win32::API v0.77    bulk88
    - Improved, hardened tests for error code returned by API/More's new()
