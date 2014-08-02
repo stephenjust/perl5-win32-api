@@ -52,6 +52,6 @@ package main;
         )),
         'VERSION_FROM' => '../API.pm',
         'dist'	=> {COMPRESS => 'gzip -9f', SUFFIX => 'gz'},
-        ($] > 5.007000 ? () : (TYPEMAPS => ['../typemap56'])),
+         TYPEMAPS => [($] > 5.007000 ? () : '../typemap56'), '../TYPEMAP'],
     );
 
