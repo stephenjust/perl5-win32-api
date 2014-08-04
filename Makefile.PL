@@ -67,6 +67,7 @@ WriteMakefile1(
     #'clean' => {FILES => 'API_test.dll API_test_dll/Release/*'},
     
     XSOPT  => ' -nolinenumbers ',
+    TYPEMAPS => ['TYPEMAP'],
     #for custom alloca
     (!$is_64bit_build && $is_msvc_compiler ?  (dynamic_lib => {OTHERLDFLAGS => '-FORCE:MULTIPLE'}) : ()),
     ($ExtUtils::MakeMaker::VERSION >= 6.47 ? (MIN_PERL_VERSION => 5.000000) : ()),

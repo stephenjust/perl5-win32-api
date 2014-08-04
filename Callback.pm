@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( $VERSION @ISA $Stage2FuncPtrPkd );
 
-$VERSION = '0.78_01';
+$VERSION = '0.78_02';
 
 
 require Exporter;      # to export the constants to the main:: space

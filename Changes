@@ -1,5 +1,9 @@
 History of Win32::API perl extension.
 
+2014-08-04  Win32::API v0.78_02    bulk88
+   - Fixed, trial release for
+     http://www.cpantesters.org/cpan/report/f6bd6af0-1a3b-11e4-b698-db7a2867dcfa
+
 2014-08-02  Win32::API v0.78_01    bulk88
    - Fixed, trial release for
      http://www.cpantesters.org/cpan/report/e98d4c80-198a-11e4-b698-db7a2867dcfa
