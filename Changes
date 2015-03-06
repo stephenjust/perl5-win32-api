@@ -1,5 +1,8 @@
 History of Win32::API perl extension.
 
+2015-03-05  Win32::API v0.80    bulk88
+   - Fixed RT #100666, newer Cygwins strnicmp link failure in Callback.xs
+
 2014-08-25  Win32::API v0.79    bulk88
    - promote to release version
 

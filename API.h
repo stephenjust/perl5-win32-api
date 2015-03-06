@@ -23,6 +23,8 @@
 #  if defined(_WIN64) && !defined(WIN64)
 #    define WIN64
 #  endif
+#  define stricmp strcasecmp
+#  define strnicmp strncasecmp
 #endif
 
 /* old (5.8 ish) strawberry perls/Mingws somehow dont ever include malloc.h from
