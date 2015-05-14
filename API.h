@@ -52,11 +52,6 @@
 #  error unknown compiler
 #endif
 
-/*
-  when using WIN32_API_DEBUG change the iterations count to 1 in benchmark.t
-  otherwise the test takes eternity
-*/
-
 // #define WIN32_API_DEBUG
 
 #ifdef WIN32_API_DEBUG

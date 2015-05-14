@@ -1,5 +1,8 @@
 History of Win32::API perl extension.
 
+2015-05-14  Win32::API v0.80_02    bulk88
+   - Improvements to deugging mode for RT #104426
+
 2015-03-05  Win32::API v0.80_01    bulk88
    - additional diagnostics for
      http://www.cpantesters.org/cpan/report/fa1749cc-6bf4-1014-a4f8-5a5c5d380f5a

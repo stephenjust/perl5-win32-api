@@ -316,6 +316,10 @@ BOOT:
 #else
         newCONSTSUB(stash, "IsGCC",&PL_sv_no);
 #endif
+/*only used by tests with eval guard, dont create it on non-debugging to save memory*/
+#ifdef WIN32_API_DEBUG
+        newCONSTSUB(stash, "IsWIN32_API_DEBUG",&PL_sv_yes);
+#endif
     {
     typedef struct {
         unsigned char len;

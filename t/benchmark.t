@@ -97,6 +97,12 @@ if(*Win32::API::_xxSetLastError{CODE}) {
     diag("time was $delta secs, ".(($delta/scalar(@{[0..$iterations, 1,1]}))*1000)." ms per _xxSetLastError call");    
 }
 }
-benchmark();
+
+SKIP: {
+    skip('debugging is on', 5)
+        if *Win32::API::IsWIN32_API_DEBUG{CODE} && Win32::API::IsWIN32_API_DEBUG();
+    benchmark();
+}
+
 #my $walker = B::Concise::compile('-src','-exec', *benchmark{CODE});
 #$walker->();

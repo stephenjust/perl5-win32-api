@@ -72,6 +72,9 @@ WriteMakefile1(
     (!$is_64bit_build && $is_msvc_compiler ?  (dynamic_lib => {OTHERLDFLAGS => '-FORCE:MULTIPLE'}) : ()),
     ($ExtUtils::MakeMaker::VERSION >= 6.47 ? (MIN_PERL_VERSION => 5.000000) : ()),
     
+    # remove this in 0.81/stable
+    FUNCLIST => ['boot_Win32__API', 'Call_asm', 'XS_Win32__API_ImportCall'],
+
     (
         $is_64bit_build
 	    ? ( $is_msvc_compiler

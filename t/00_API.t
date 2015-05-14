@@ -41,7 +41,7 @@ SKIP: {
 
     # TODO Check if this test still makes sense in 2008
     if (not Win32::IsWinNT()) {
-        skip('because GetCurrentProcessId() not available on non-WinNT platforms', 3);
+        skip('because GetCurrentProcessId() not available on non-WinNT platforms', 5);
     }
 
     # Simple test, from kernel32
@@ -338,9 +338,12 @@ SKIP: {
     my $str = "0";
     my $emptystr = "";
     my $num = 0;
-    ok(!($function->Call('0')) && !($function->Call('')) && $function->Call(0)
-       && !($function->Call(undef)),
-       "NULL behavior with letter proto is okay, consts");
+    {
+        no warnings 'uninitialized';
+        ok(!($function->Call('0')) && !($function->Call('')) && $function->Call(0)
+           && !($function->Call(undef)),
+           "NULL behavior with letter proto is okay, consts");
+    }
     ok(!($function->Call($str)) && $function->Call($num),
        "NULL behavior with letter proto is okay, scalars");
     ok( ( index(qx[$^X -V], 'PERL_PRESERVE_IVUV') != -1
