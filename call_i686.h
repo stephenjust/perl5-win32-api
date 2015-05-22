@@ -5,10 +5,14 @@
    Is it possible?
 */
 
-/* the code below will compile under MSVC can be used to generate boilerplate for
-   the MASM code, but the MASM version is more efficient, this file is #included
-   twice, once in API.xs and once (if applicable) in call_i686.c*/
-#if defined(__GNUC__) && defined(IS_CALL_I686_C)
+/* The code in this file is not used anymore since each CC has its own asm
+   version.
+
+   The code below will compile under MSVC can be used to generate boilerplate for
+   the MASM code, but the ASM versions are more efficient, this file is #included
+   twice, once in API.xs and once (if applicable) in call_i686.c
+   */
+#if 0
 
 PORTALIGN(1) const char bad_esp_msg [];
 
@@ -334,7 +338,5 @@ void __fastcall Call_asm(const APIPARAM * param /*in caller, this a * to after t
               const APIPARAM * const params_start,
               const APICONTROL * const control,
               APIPARAM_U * const retval);
-/*
-void __fastcall Call_asm(const APIPARAM * param, const APIPARAM * const params_start, const APICONTROL * const control,APIPARAM_U * const retval);
- */
-#endif /* defined(__GNUC__) && IS_CALL_I686_C */
+
+#endif /* #if 0*/

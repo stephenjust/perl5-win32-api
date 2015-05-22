@@ -37,7 +37,8 @@ WriteMakefile1(
         'Win32'         => 0,
         'Win32API::File'=> 0,
         'IPC::Open3'    => 0,
-        'Encode::compat'=> 0
+        'Encode::compat'=> 0,
+        'Config::Perl::V'=>0
     },
 
     'NAME'	=> 'Win32::API',
@@ -73,7 +74,7 @@ WriteMakefile1(
     ($ExtUtils::MakeMaker::VERSION >= 6.47 ? (MIN_PERL_VERSION => 5.000000) : ()),
     
     # remove this in 0.81/stable
-    FUNCLIST => ['boot_Win32__API', 'Call_asm', 'XS_Win32__API_ImportCall'],
+    FUNCLIST => ['boot_Win32__API', '@Call_asm@16', 'XS_Win32__API_ImportCall'],
 
     (
         $is_64bit_build
@@ -83,7 +84,7 @@ WriteMakefile1(
 		)
 	    : ( $is_msvc_compiler
                     ? ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x86_msvc$(OBJ_EXT)' )
-                    : ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_i686$(OBJ_EXT)' )
+                    : ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x86_gnu$(OBJ_EXT)' )
               )
     )
 );
@@ -108,6 +109,7 @@ sub MY::postamble
 	perl -pi.bak -e "s/^(.globl )?Call_x64_real/$$1_Call_x64_real/" call_asm_x64_gnu.s
 	$(AS) $(ASFLAGS) $< -o $*$(OBJ_EXT)
 
+#target unused
 #make GCC issue "push" instructions rather than "mov" to esp+offset, this is the magic
 #recipe to get GCC (4.6.3 tested) to do it
 call_i686$(OBJ_EXT): call_i686.c API.h
@@ -127,8 +129,9 @@ ASFLAGS =  -Zi
 	'.($is_64bit_build ? 'ml64' : 'ml').' $(ASFLAGS) $(PERL_DEFINES)  -c $<
 
 .s$(OBJ_EXT):
-	$(AS) $(ASFLAGS) $< -o $*$(OBJ_EXT)
+	$(AS) $(ASFLAGS) $(PERL_DEFINES) $< -o $*$(OBJ_EXT)
 
+#target unused
 #make GCC issue "push" instructions rather than "mov" to esp+offset, this is the magic
 #recipe to get GCC (4.6.3 tested) to do it
 call_i686$(OBJ_EXT): call_i686.c API.h
@@ -150,7 +153,7 @@ package MY; #subs below use SUPER::, subs above use main:: vars
 
 sub post_constants {
     #if Call.c changes API.obj must be rebuilt
-    return
+    return (!$is_msvc_compiler && $] lt '5.014' ? "AS\t= as\n" : '').
 'benchmark :: pure_all
 	$(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness(\'$(TEST_VERBOSE)\', \'$(INST_LIB)\', \'$(INST_ARCHLIB)\')" t/benchmark.t
 
@@ -176,8 +179,24 @@ sub cflags {
 #this is for Callback.xs, on Cygwin, $(PASTHRU) is used to override on cmd line
 #OPTIMIZE macro from the parent makefile (this one)
     $dlib =~ s/(^OPTIMIZE = .+)$/$1 ${\main::no_stackprotector()}/m;
-    my @defs = $dlib =~ /(?:-|\/)D\w+/g;
-    return $dlib.'PERL_DEFINES = '.join(' ', @defs)."\n";
+
+    my @defs; #On Cygwin (and Win32 Perl one day) all the important defines are
+    #not on the command line but in config.h so -V needs to be used to read them out
+    #save time by not loading or running Config::Perl::V on newer Perls
+    if($] lt '5.014') {
+        require Config::Perl::V;
+        $optionshash = Config::Perl::V::myconfig()->{build}{options};
+        foreach(keys %$optionshash) {
+            push @defs, $_ if $optionshash->{$_};
+        }
+    } else {
+        @defs = Config::bincompat_options(), Config::non_bincompat_options();
+    }
+    return $dlib.'PERL_DEFINES = '.(@defs?'-D':'').join(' -D', @defs)."\n" if $is_msvc_compiler;
+#convert -DFOO into GNU AS compatible defines for GNU AS macros
+    my $defs = '';
+    $defs .= '-defsym '.$_.'=1 ' foreach @defs;
+    return $dlib.'PERL_DEFINES = '.$defs."\n";
 }
 
 sub test {
