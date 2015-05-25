@@ -21,15 +21,6 @@ $VERSION = '0.80_02';
 #require XSLoader;    # to dynuhlode the module. #already loaded by Win32::API
 #use Data::Dumper;
 
-sub DEBUG {
-    if ($WIN32::API::DEBUG) {
-        printf @_ if @_ or return 1;
-    }
-    else {
-        return 0;
-    }
-}
-
 use Win32::API qw ( WriteMemory ) ;
 
 BEGIN {
@@ -50,6 +41,8 @@ BEGIN {
     if(OPV <= 5.008000){ #don't have unpackstring in C
         eval('sub _CallUnpack {return unpack($_[0], $_[1]);}');
     }
+    *DEBUGCONST = *Win32::API::DEBUGCONST;
+    *DEBUG = *Win32::API::DEBUG;
 }
 #######################################################################
 # dynamically load in the API extension module.
@@ -92,10 +85,10 @@ sub new {
     $self->{sub} = $proc;
     $self->{cdecl} = Win32::API::calltype_to_num($callconvention);
 
-    DEBUG "(PM)Callback::new: calling CallbackCreate($self)...\n";
+    DEBUG "(PM)Callback::new: calling CallbackCreate($self)...\n" if DEBUGCONST;
     my $hproc = MakeCB($self);
 
-    DEBUG "(PM)Callback::new: hproc=$hproc\n";
+    DEBUG "(PM)Callback::new: hproc=$hproc\n" if DEBUGCONST;
 
     $self->{code} = $hproc;
 
@@ -105,7 +98,7 @@ sub new {
 
 sub MakeStruct {
     my ($self, $n, $addr) = @_;
-    DEBUG "(PM)Win32::API::Callback::MakeStruct: got self='$self'\n";
+    DEBUG "(PM)Win32::API::Callback::MakeStruct: got self='$self'\n" if DEBUGCONST;
     my $struct = Win32::API::Struct->new($self->{intypes}->[$n]);
     $struct->FromMemory($addr);
     return $struct;

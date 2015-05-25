@@ -4,9 +4,17 @@ History of Win32::API perl extension.
    - Fixed #104426, GCC 32 bit build uses real assembly code and a real
      (GNU) assembler instead of inline assembly, Borland C support, if it still
      worked, has been removed
+   - 30-40% startup time improvement ("timeit perl -e"require Win32::API;
+     Win32::API->import();""), and 632 KB less memory used on startup
+     on 32 bit threaded 5.22 Perl ("perl -e"system 'pause'; require Win32::API;
+     Win32::API->import(); system 'pause'"")
+   - Fixed, setting $DEBUG in a BEGIN block, which is described in the POD
+     but didn't actually work and was ignored from a BEGIN block
+   - Debug mode code is now compiled away using constant folding, undocumented
+     runtime setting of $DEBUG has been removed
 
 2015-05-14  Win32::API v0.80_02    bulk88
-   - Improvements to deugging mode for RT #104426
+   - Improvements to debugging mode for RT #104426
 
 2015-03-05  Win32::API v0.80_01    bulk88
    - additional diagnostics for

@@ -38,8 +38,6 @@ BEGIN {
     WriteMemory SafeReadWideCString ); # symbols to export on request
 
     use Scalar::Util qw( looks_like_number weaken);
-
-    $DEBUG = 0;
     
     sub ERROR_NOACCESS	() { 998 }
     sub ERROR_NOT_ENOUGH_MEMORY () { 8 }
@@ -52,10 +50,12 @@ BEGIN {
     sub APICONTROL_has_proto() { 0x20 }
     eval ' *Win32::API::Type::PTRSIZE = *Win32::API::More::PTRSIZE = *PTRSIZE = sub () { '.length(pack('p', undef)).' };'.
           #Win64 added in 5.7.3
-         ' *Win32::API::Type::IVSIZE = *Win32::API::More::IVSIZE = *IVSIZE = sub () { '.length(pack($] >= 5.007003 ? 'J' : 'I' ,0)).' };';
+         ' *Win32::API::Type::IVSIZE = *Win32::API::More::IVSIZE = *IVSIZE = sub () { '.length(pack($] >= 5.007003 ? 'J' : 'I' ,0)).' };'.
+         ' *Win32::API::Type::DEBUGCONST = *Win32::API::Struct::DEBUGCONST = *DEBUGCONST = sub () { '.(!!$DEBUG+0).' };'
 }
 
 sub DEBUG {
+    #checking flag redundant now, but keep in case of an accidental unprotected call
     if ($Win32::API::DEBUG) {
         printf @_ if @_ or return 1;
     }
@@ -106,17 +106,17 @@ sub new {
             # isn't there an API for this?
             my $newdll = `cygpath -w "$dll"`;
             chomp $newdll;
-            DEBUG "(PM)new: converted '$dll' to\n  '$newdll'\n" if $DEBUG;
+            DEBUG "(PM)new: converted '$dll' to\n  '$newdll'\n" if DEBUGCONST;
             $dll = $newdll;
         }
     
         #### avoid loading a library more than once
         if (exists($Libraries{$dll})) {
-            DEBUG "Win32::API::new: Library '$dll' already loaded, handle=$Libraries{$dll}\n" if $DEBUG;
+            DEBUG "Win32::API::new: Library '$dll' already loaded, handle=$Libraries{$dll}\n" if DEBUGCONST;
             $hdll = $Libraries{$dll};
         }
         else {
-            DEBUG "Win32::API::new: Loading library '$dll'\n" if $DEBUG;
+            DEBUG "Win32::API::new: Loading library '$dll'\n" if DEBUGCONST;
             $hdll = Win32::API::LoadLibrary($dll);
             $freedll = 1;
     #        $Libraries{$dll} = $hdll;
@@ -125,14 +125,14 @@ sub new {
         #### if the dll can't be loaded, set $! to Win32's GetLastError()
         if (!$hdll) {
             $! = Win32::GetLastError();
-            DEBUG "FAILED Loading library '$dll': $^E\n" if $DEBUG;
+            DEBUG "FAILED Loading library '$dll': $^E\n" if DEBUGCONST;
             return undef;
         }
     }
     else{
         if(!looks_like_number($hproc) || IsBadReadPtr($hproc, 4)){
             Win32::SetLastError(ERROR_NOACCESS);
-            DEBUG "FAILED Function pointer '$hproc' is not a valid memory location\n" if $DEBUG;
+            DEBUG "FAILED Function pointer '$hproc' is not a valid memory location\n" if DEBUGCONST;
             return undef;
         }
     }
@@ -189,15 +189,15 @@ sub new {
         #### ...if all that fails, give up, $! setting is back compat, $! is deprecated
         if (!$hproc) {
             my $err = $! = Win32::GetLastError();
-            DEBUG "FAILED GetProcAddress for Proc '$proc': $^E\n" if $DEBUG;
+            DEBUG "FAILED GetProcAddress for Proc '$proc': $^E\n" if DEBUGCONST;
             Win32::API::FreeLibrary($hdll) if $freedll;
             Win32::SetLastError($err);
             return undef;
         }
-        DEBUG "GetProcAddress('$proc') = '$hproc'\n" if $DEBUG;
+        DEBUG "GetProcAddress('$proc') = '$hproc'\n" if DEBUGCONST;
     }
     else {
-        DEBUG "Using non-DLL function pointer '$hproc' for '$proc'\n" if $DEBUG;
+        DEBUG "Using non-DLL function pointer '$hproc' for '$proc'\n" if DEBUGCONST;
     }
     if(PTRSIZE == 4 && $ccnum == APICONTROL_CC_C) {#fold out on WIN64
         #calculate add to ESP amount, in units of 4, will be *4ed later
@@ -210,7 +210,7 @@ sub new {
     # length of {in} letter array, so 2 different checks need to be done
     if($#{$self->{in}} > 0xFFFF) {
         too_many_in_params:
-        DEBUG "FAILED This function has too many parameters (> ~65535) \n" if $DEBUG;
+        DEBUG "FAILED This function has too many parameters (> ~65535) \n" if DEBUGCONST;
         Win32::API::FreeLibrary($hdll) if $freedll;
         Win32::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return undef;
@@ -261,7 +261,7 @@ sub new {
         $Libraries{$dll} = $hdll;
         $Procedures{$dll}++;
     }
-    DEBUG "Object blessed!\n" if $DEBUG;
+    DEBUG "Object blessed!\n" if DEBUGCONST;
 
     my $ref = bless(\$control, $class);
     SetMagicSV($ref, $self);
@@ -290,7 +290,7 @@ sub DESTROY {
 
     #### once it reaches 0, free it
     if ($Procedures{$self->{dllname}} == 0) {
-        DEBUG "Win32::API::DESTROY: Freeing library '$self->{dllname}'\n" if $DEBUG;
+        DEBUG "Win32::API::DESTROY: Freeing library '$self->{dllname}'\n" if DEBUGCONST;
         Win32::API::FreeLibrary($Libraries{$self->{dllname}});
         delete($Libraries{$self->{dllname}});
     }
@@ -527,8 +527,8 @@ sub parse_prototype {
         $params =~ s/^\s+//;
         $params =~ s/\s+$//;
 
-        DEBUG "(PM)parse_prototype: got PROC '%s'\n",   $proc if $DEBUG;
-        DEBUG "(PM)parse_prototype: got PARAMS '%s'\n", $params if $DEBUG;
+        DEBUG "(PM)parse_prototype: got PROC '%s'\n",   $proc if DEBUGCONST;
+        DEBUG "(PM)parse_prototype: got PARAMS '%s'\n", $params if DEBUGCONST;
         
         foreach my $param (split(/\s*,\s*/, $params)) {
             my ($type, $name);
@@ -548,20 +548,20 @@ sub parse_prototype {
                     DEBUG "(PM)parse_prototype: IN='%s' PACKING='%s' API_TYPE=%d\n",
                         $type,
                         $packing,
-                        $class->type_to_num('P') if $DEBUG;
+                        $class->type_to_num('P') if DEBUGCONST;
                     push(@in_params, $class->type_to_num('P'));
                 }
                 else {
                     DEBUG "(PM)parse_prototype: IN='%s' PACKING='%s' API_TYPE=%d\n",
                         $type,
                         $packing,
-                        $class->type_to_num(Win32::API::Type->packing($type, undef, 1)) if $DEBUG;
+                        $class->type_to_num(Win32::API::Type->packing($type, undef, 1)) if DEBUGCONST;
                     push(@in_params, $class->type_to_num(Win32::API::Type->packing($type, undef, 1)));
                 }
             }
             elsif (Win32::API::Struct::is_known($type)) {
                 DEBUG "(PM)parse_prototype: IN='%s' PACKING='%s' API_TYPE=%d\n",
-                    $type, 'T', Win32::API::More->type_to_num('T') if $DEBUG;
+                    $type, 'T', Win32::API::More->type_to_num('T') if DEBUGCONST;
                 push(@in_params, Win32::API::More->type_to_num('T'));
             }
             else {
@@ -572,7 +572,7 @@ sub parse_prototype {
             push(@in_types, $type);
 
         }
-        DEBUG "parse_prototype: IN=[ @in_params ]\n" if $DEBUG;
+        DEBUG "parse_prototype: IN=[ @in_params ]\n" if DEBUGCONST;
 
 
         if (Win32::API::Type::is_known($ret)) {
@@ -580,7 +580,7 @@ sub parse_prototype {
                 DEBUG "parse_prototype: OUT='%s' PACKING='%s' API_TYPE=%d\n",
                     $ret,
                     Win32::API::Type->packing($ret),
-                    $class->type_to_num('P') if $DEBUG;
+                    $class->type_to_num('P') if DEBUGCONST;
                 return ($proc, \@in_params, \@in_types, $class->type_to_num('P', 1),
                     $ret, calltype_to_num($callconvention));
             }
@@ -588,7 +588,7 @@ sub parse_prototype {
                 DEBUG "parse_prototype: OUT='%s' PACKING='%s' API_TYPE=%d\n",
                     $ret,
                     Win32::API::Type->packing($ret),
-                    $class->type_to_num(Win32::API::Type->packing($ret, undef, 1), 1) if $DEBUG;
+                    $class->type_to_num(Win32::API::Type->packing($ret, undef, 1), 1) if DEBUGCONST;
                 return (
                     $proc, \@in_params, \@in_types,
                     $class->type_to_num(Win32::API::Type->packing($ret, undef, 1), 1),

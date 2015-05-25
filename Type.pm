@@ -126,7 +126,7 @@ sub typedef {
         return undef;            
         }
     }
-    DEBUG "(PM)Type::typedef: packing='$packing'\n";
+    DEBUG "(PM)Type::typedef: packing='$packing'\n" if DEBUGCONST;
     if($packing eq 'p'){
         $Pointer{$name} = $Pointer{$type};
     }else{
@@ -278,7 +278,7 @@ sub Unpack {
     my $pack_type = packing($type);
 
     if ($pack_type eq 'p') {
-        DEBUG "(PM)Type::Unpack: got packing 'p': is a pointer\n";
+        DEBUG "(PM)Type::Unpack: got packing 'p': is a pointer\n" if DEBUGCONST;
         #$pack_type = 'Z*';
         return;
     }
@@ -287,20 +287,20 @@ sub Unpack {
         if($pack_type eq 'q'){
             if($_[0]->UseMI64() || ref($_[2])){
             $_[2] = Math::Int64::native_to_int64($_[2]);
-            DEBUG "(PM)Type::Unpack: returning signed Math::Int64 '".$_[2]."'\n";
+            DEBUG "(PM)Type::Unpack: returning signed Math::Int64 '".$_[2]."'\n" if DEBUGCONST;
             }
             return;
         }elsif($pack_type eq 'Q'){
             if($_[0]->UseMI64() || ref($_[2])){
             $_[2] = Math::Int64::native_to_uint64($_[2]);
-            DEBUG "(PM)Type::Unpack: returning unsigned Math::Int64 '".$_[2]."'\n";
+            DEBUG "(PM)Type::Unpack: returning unsigned Math::Int64 '".$_[2]."'\n" if DEBUGCONST;
             }
             return;
         }
     }
-    DEBUG "(PM)Type::Unpack: unpacking '$pack_type' '$_[2]'\n";
+    DEBUG "(PM)Type::Unpack: unpacking '$pack_type' '$_[2]'\n" if DEBUGCONST;
     $_[2] = unpack($pack_type, $_[2]);
-    DEBUG "(PM)Type::Unpack: returning '" . ($_[2] || '') . "'\n";
+    DEBUG "(PM)Type::Unpack: returning '" . ($_[2] || '') . "'\n" if DEBUGCONST;
 }
 
 1;

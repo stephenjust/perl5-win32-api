@@ -115,7 +115,7 @@ sub recognize {
             $size    = $1;
             $packing = $packing . '*' . $size;
         }
-        DEBUG "(PM)Struct::recognize got '$name', '$type' -> '$packing'\n";
+        DEBUG "(PM)Struct::recognize got '$name', '$type' -> '$packing'\n" if DEBUGCONST;
         return ($name, $packing, $type);
     }
 }
@@ -126,7 +126,7 @@ sub new {
     my $self = {typedef => [],};
     if ($#_ == 0) {
         if (is_known($_[0])) {
-            DEBUG "(PM)Struct::new: got '$_[0]'\n";
+            DEBUG "(PM)Struct::new: got '$_[0]'\n" if DEBUGCONST;
             if( ! defined ($self->{typedef} = $Known{$_[0]}->{typedef})){
                 lazycarp 'Win32::API::Struct::new: unknown type="'.$_[0].'"';
                 return undef;
@@ -190,7 +190,7 @@ sub sizeof {
                 $size += Win32::API::Type::sizeof($type) * $1;
                 $first = Win32::API::Type::sizeof($type) * $1 unless defined $first;
                 DEBUG "(PM)Struct::sizeof: sizeof with member($name) now = " . $size
-                    . "\n";
+                    . "\n" if DEBUGCONST;
             }
             else {                            # Simple types
                 my $type_size = Win32::API::Type::sizeof($type);
@@ -206,7 +206,7 @@ sub sizeof {
     if (defined $align && $align > 0) {
         $struct_size += ($size % $align);
     }
-    DEBUG "(PM)Struct::sizeof first=$first totalsize=$struct_size\n";
+    DEBUG "(PM)Struct::sizeof first=$first totalsize=$struct_size\n" if DEBUGCONST;
     return $struct_size;
 }
 
@@ -265,7 +265,7 @@ sub getPack {
         if ($type eq '>') {
             my ($subpacking, $subitems, $subrecipients, $subpacksize, $subbuffersptrs) =
                 $self->{$name}->getPack();
-            DEBUG "(PM)Struct::getPack($self->{__typedef__}) ++ $subpacking\n";
+            DEBUG "(PM)Struct::getPack($self->{__typedef__}) ++ $subpacking\n" if DEBUGCONST;
             push(@items,      @$subitems);
             push(@recipients, @$subrecipients);
             push(@buffer_ptrs, @$subbuffersptrs);
@@ -279,7 +279,7 @@ sub getPack {
                 $type = "a$repeat";
             }
 
-            DEBUG "(PM)Struct::getPack($self->{__typedef__}) ++ $type\n";
+            DEBUG "(PM)Struct::getPack($self->{__typedef__}) ++ $type\n" if DEBUGCONST;
 
             if ($type eq 'p') {
                 $type = Win32::API::Type::pointer_pack_type();
@@ -310,7 +310,7 @@ sub getPack {
     }
 
     DEBUG
-        "(PM)Struct::getPack: $self->{__typedef__}(buffer) = pack($packing, $packed_size)\n";
+        "(PM)Struct::getPack: $self->{__typedef__}(buffer) = pack($packing, $packed_size)\n" if DEBUGCONST;
 
     return ($packing, [@items], [@recipients], $packed_size, \@buffer_ptrs);
 }
@@ -322,9 +322,7 @@ sub Pack {
     ($packing,  $items,     $self->{buffer_recipients},
      undef,     $self->{buffer_ptrs}) = $self->getPack();
 
-    if(DEBUG){
-    DEBUG "(PM)Struct::Pack: $self->{__typedef__}(buffer) = pack($packing, @$items)\n";
-    }
+    DEBUG "(PM)Struct::Pack: $self->{__typedef__}(buffer) = pack($packing, @$items)\n" if DEBUGCONST;
     
     if($_[0]){ #Pack() on a new struct, without slice set, will cause lots of uninit
         #warnings, sometimes its intentional to set up buffer recipients for a
@@ -335,7 +333,7 @@ sub Pack {
     else{
         $self->{buffer} = pack($packing, @$items);
     }
-    if (DEBUG) {
+    if (DEBUGCONST) {
         for my $i (0 .. $self->sizeof - 1) {
             printf "#pack#    %3d: 0x%02x\n", $i, ord(substr($self->{buffer}, $i, 1));
         }
@@ -353,7 +351,7 @@ sub getUnpack {
         my ($name, $type, $orig) = @$member;
         if ($type eq '>') {
             my ($subpacking, $subpacksize, $subitems, $subtypes, $subtype_names) = $self->{$name}->getUnpack();
-            DEBUG "(PM)Struct::getUnpack($self->{__typedef__}) ++ $subpacking\n";
+            DEBUG "(PM)Struct::getUnpack($self->{__typedef__}) ++ $subpacking\n" if DEBUGCONST;
             $packing .= $subpacking;
             $packed_size += $subpacksize;
             push(@items, @$subitems);
@@ -370,7 +368,7 @@ sub getUnpack {
                 $repeat = $1;
                 $type = "Z$repeat";
             }
-            DEBUG "(PM)Struct::getUnpack($self->{__typedef__}) ++ $type\n";
+            DEBUG "(PM)Struct::getUnpack($self->{__typedef__}) ++ $type\n" if DEBUGCONST;
             $type_size  = Win32::API::Type::sizeof($orig);
             $type_align = (($packed_size + $type_size) % $type_size);
             $packing .= "x" x $type_align . $type;
@@ -386,7 +384,7 @@ sub getUnpack {
             push(@type_names, $orig);
         }
     }
-    DEBUG "(PM)Struct::getUnpack($self->{__typedef__}): unpack($packing, @items)\n";
+    DEBUG "(PM)Struct::getUnpack($self->{__typedef__}): unpack($packing, @items)\n" if DEBUGCONST;
     return ($packing, $packed_size, \@items, \@types, \@type_names);
 }
 
@@ -394,7 +392,7 @@ sub Unpack {
     my $self = shift;
     my ($packing, undef, $items, $types, $type_names) = $self->getUnpack();
     my @itemvalue = unpack($packing, $self->{buffer});
-    DEBUG "(PM)Struct::Unpack: unpack($packing, buffer) = @itemvalue\n";
+    DEBUG "(PM)Struct::Unpack: unpack($packing, buffer) = @itemvalue\n" if DEBUGCONST;
     foreach my $i (0 .. $#$items) {
         my $recipient = $self->{buffer_recipients}->[$i];
         my $item = $$items[$i];
@@ -403,7 +401,7 @@ sub Unpack {
             $item,
             $itemvalue[$i],
             $itemvalue[$i],
-            ;
+            if DEBUGCONST;
         if($$types[$i] eq 'T'){
 my $oldstructptr = pop(@{$self->{buffer_ptrs}});
 my $newstructptr = $itemvalue[$i];
@@ -450,15 +448,17 @@ else{ #new ptr is true
 
 sub FromMemory {
     my ($self, $addr) = @_;
-    DEBUG "(PM)Struct::FromMemory: doing Pack\n";
+    DEBUG "(PM)Struct::FromMemory: doing Pack\n" if DEBUGCONST;
     $self->Pack();
-    DEBUG "(PM)Struct::FromMemory: doing GetMemory( 0x%08x, %d )\n", $addr, $self->sizeof;
+    DEBUG "(PM)Struct::FromMemory: doing GetMemory( 0x%08x, %d )\n", $addr, $self->sizeof if DEBUGCONST;
     $self->{buffer} = Win32::API::ReadMemory($addr, $self->sizeof);
     $self->Unpack();
-    DEBUG "(PM)Struct::FromMemory: doing Unpack\n";
-    DEBUG "(PM)Struct::FromMemory: structure is now:\n";
-    $self->Dump() if DEBUG;
-    DEBUG "\n";
+    if(DEBUGCONST) {
+        DEBUG "(PM)Struct::FromMemory: doing Unpack\n";
+        DEBUG "(PM)Struct::FromMemory: structure is now:\n";
+        $self->Dump();
+        DEBUG "\n";
+    }
 }
 
 sub Dump {
