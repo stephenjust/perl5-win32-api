@@ -18,13 +18,18 @@ package Win32::API;
     use warnings;
 BEGIN {
     require Exporter;      # to export the constants to the main:: space
-    use XSLoader;
 
     sub ISCYG ();
-    eval "sub ISCYG () { ".($^O eq 'cygwin' ? 1 : 0)."}";
-    no warnings 'uninitialized';
-    die "Win32::API on Cygwin requires the cygpath tool on PATH"
-        if ISCYG && index(`cygpath --help`,'Usage: cygpath') == -1;
+    if($^O eq 'cygwin') {
+        no warnings 'uninitialized';
+        die "Win32::API on Cygwin requires the cygpath tool on PATH"
+            if index(`cygpath --help`,'Usage: cygpath') == -1;
+        require File::Basename;
+        eval "sub ISCYG () { 1 }";
+    } else {
+        eval "sub ISCYG () { 0 }";
+    }
+
 
     use vars qw( $DEBUG $sentinal @ISA @EXPORT_OK $VERSION );
 
@@ -59,9 +64,8 @@ sub DEBUG {
     }
 }
 
-use Win32::API::Type;
-use Win32::API::Struct;
-use File::Basename ();
+use Win32::API::Type ();
+use Win32::API::Struct ();
 
 #######################################################################
 # STATIC OBJECT PROPERTIES
@@ -78,6 +82,7 @@ my %Procedures = ();
 # BEGIN required for constant subs in BOOT:
 BEGIN {
     $VERSION = '0.80_02';
+    require XSLoader;
     XSLoader::load 'Win32::API', $VERSION;
 }
 

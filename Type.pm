@@ -14,23 +14,21 @@ package Win32::API::Type;
 
 use strict;
 use warnings;
-use vars qw( %Known %PackSize %Modifier %Pointer $VERSION @ISA );
+use vars qw( %Known %PackSize %Modifier %Pointer $VERSION );
 
 $VERSION = '0.69';
 
-require Exporter;      # to export the constants to the main:: space
-@ISA = qw( Exporter);
+#import DEBUG sub
+sub DEBUG;
+*DEBUG = *Win32::API::DEBUG;
 
-sub DEBUG {
-    if ($Win32::API::DEBUG) {
-        printf @_ if @_ or return 1;
-    }
-    else {
-        return 0;
-    }
+#const optimize
+BEGIN {
+    eval ' sub pointer_pack_type () { \''
+    .(PTRSIZE == 8 ? 'Q' : 'L').
+    '\' }';
 }
 
-sub pointer_pack_type ();
 %Known    = ();
 %PackSize = ();
 %Modifier = ();
@@ -41,7 +39,7 @@ sub pointer_pack_type ();
 #
 my $section = 'nothing';
 foreach (<DATA>) {
-    next if /^\s*#/ or /^\s*$/;
+    next if /^\s*(?:#|$)/;
     chomp;
     if (/\[(.+)\]/) {
         $section = $1;
@@ -51,18 +49,22 @@ foreach (<DATA>) {
         my ($name, $packing) = split(/\s+/);
 
         # DEBUG "(PM)Type::INIT: Known('$name') => '$packing'\n";
-        if ($packing eq '_P') {
-            $packing = pointer_pack_type();
-        }
+        $packing = pointer_pack_type()
+            if ($packing eq '_P');
         $Known{$name} = $packing;
+    }
+    elsif ($section eq 'POINTER') {
+        my ($pointer, $pointto) = split(/\s+/);
+
+        # DEBUG "(PM)Type::INIT: Pointer('$pointer') => '$pointto'\n";
+        $Pointer{$pointer} = $pointto;
     }
     elsif ($section eq 'PACKSIZE') {
         my ($packing, $size) = split(/\s+/);
 
         # DEBUG "(PM)Type::INIT: PackSize('$packing') => '$size'\n";
-        if ($size eq '_P') {
-            $size = PTRSIZE;
-        }
+        $size = PTRSIZE
+            if ($size eq '_P');
         $PackSize{$packing} = $size;
     }
     elsif ($section eq 'MODIFIER') {
@@ -75,12 +77,6 @@ foreach (<DATA>) {
 
         # DEBUG "(PM)Type::INIT: Modifier('$modifier') => '%maps'\n";
         $Modifier{$modifier} = {%maps};
-    }
-    elsif ($section eq 'POINTER') {
-        my ($pointer, $pointto) = split(/\s+/);
-
-        # DEBUG "(PM)Type::INIT: Pointer('$pointer') => '$pointto'\n";
-        $Pointer{$pointer} = $pointto;
     }
 }
 close(DATA);
@@ -150,13 +146,6 @@ sub is_known {
     else {
         return defined packing($type);
     }
-}
-
-#const optimize
-BEGIN {
-    eval ' sub pointer_pack_type () { "'
-    .(PTRSIZE == 8 ? 'Q' : 'L').
-    '" }';
 }
 
 sub sizeof {

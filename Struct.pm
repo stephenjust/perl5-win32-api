@@ -8,22 +8,15 @@
 package Win32::API::Struct;
 use strict;
 use warnings;
-use vars qw( $VERSION @ISA );
+use vars qw( $VERSION );
 $VERSION = '0.65';
-
-require Exporter;
-@ISA = qw(Exporter);
 
 my %Known = ();
 
-sub DEBUG {
-    if ($Win32::API::DEBUG) {
-        printf @_ if @_ or return 1;
-    }
-    else {
-        return 0;
-    }
-}
+#import DEBUG sub
+sub DEBUG;
+*DEBUG = *Win32::API::DEBUG;
+
 #package main;
 #
 #sub userlazyapisub2{
@@ -556,6 +549,8 @@ sub NEXTKEY {
 }
 
 1;
+
+__END__
 
 #######################################################################
 # DOCUMENTATION

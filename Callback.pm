@@ -18,8 +18,7 @@ use vars qw( $VERSION $Stage2FuncPtrPkd );
 
 $VERSION = '0.80_02';
 
-require DynaLoader;    # to dynuhlode the module.
-@ISA = qw( DynaLoader );
+#require XSLoader;    # to dynuhlode the module. #already loaded by Win32::API
 #use Data::Dumper;
 
 sub DEBUG {
@@ -32,7 +31,6 @@ sub DEBUG {
 }
 
 use Win32::API qw ( WriteMemory ) ;
-use Config;
 
 BEGIN {
     #there is supposed to be 64 bit IVs on 32 bit perl compatibility here
@@ -56,7 +54,7 @@ BEGIN {
 #######################################################################
 # dynamically load in the API extension module.
 #
-bootstrap Win32::API::Callback;
+XSLoader::load 'Win32::API::Callback', $VERSION;
 
 #######################################################################
 # PUBLIC METHODS
