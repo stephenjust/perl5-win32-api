@@ -15,7 +15,7 @@ use Test::More;
 plan tests => 3;
 
 
-use_ok('Win32::API::Struct');
+use_ok('Win32::API');
 
 typedef Win32::API::Struct PROCESSENTRY32 => qw(
     DWORD dwSize;

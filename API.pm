@@ -16,10 +16,9 @@
 package Win32::API;
     use strict;
     use warnings;
-    use Config;
 BEGIN {
     require Exporter;      # to export the constants to the main:: space
-    require DynaLoader;    # to dynuhlode the module.
+    use XSLoader;
 
     sub ISCYG ();
     eval "sub ISCYG () { ".($^O eq 'cygwin' ? 1 : 0)."}";
@@ -29,7 +28,7 @@ BEGIN {
 
     use vars qw( $DEBUG $sentinal @ISA @EXPORT_OK $VERSION );
 
-    @ISA = qw( Exporter DynaLoader );
+    @ISA = qw( Exporter );
     @EXPORT_OK = qw( ReadMemory IsBadReadPtr MoveMemory
     WriteMemory SafeReadWideCString ); # symbols to export on request
 
@@ -46,8 +45,9 @@ BEGIN {
     sub APICONTROL_UseMI64	() { 0x8 }
     sub APICONTROL_is_more	() { 0x10 }
     sub APICONTROL_has_proto() { 0x20 }
-    eval " *Win32::API::Type::PTRSIZE = *Win32::API::More::PTRSIZE = *PTRSIZE = sub  () { ".$Config{ptrsize}." }";
-    eval " *Win32::API::Type::IVSIZE = *Win32::API::More::IVSIZE = *IVSIZE = sub  () { ".$Config{ivsize}." }";
+    eval ' *Win32::API::Type::PTRSIZE = *Win32::API::More::PTRSIZE = *PTRSIZE = sub () { '.length(pack('p', undef)).' };'.
+          #Win64 added in 5.7.3
+         ' *Win32::API::Type::IVSIZE = *Win32::API::More::IVSIZE = *IVSIZE = sub () { '.length(pack($] >= 5.007003 ? 'J' : 'I' ,0)).' };';
 }
 
 sub DEBUG {
@@ -78,7 +78,7 @@ my %Procedures = ();
 # BEGIN required for constant subs in BOOT:
 BEGIN {
     $VERSION = '0.80_02';
-    bootstrap Win32::API;
+    XSLoader::load 'Win32::API', $VERSION;
 }
 
 #######################################################################

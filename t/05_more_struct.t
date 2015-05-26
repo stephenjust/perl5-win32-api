@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use Win32::API::Struct;
+use Win32::API;
 
 # TODO Move to Win32::API::Struct???
 use constant CHAR_SIZE => 1;

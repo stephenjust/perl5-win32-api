@@ -20,6 +20,12 @@ my $is_msvc_compiler = ($Config{cc} =~ /cl/);
 #     if index($Config{gccversion}, '3.4.5 (mingw-vista special r3)') != -1);
 
 use ExtUtils::MakeMaker;
+
+#some assertions to make sure pack returns the same info as Config
+#to avoid loading Config at Win32::API runtime
+die "properties of pack() dont match the properties of your perl build from %Config"
+    if length(pack($] >= 5.007003 ? 'J' : 'I' ,0)) != $Config{ivsize} || length pack('p', undef) != $Config{ptrsize};
+
 WriteMakefile1(
     PL_FILES => {},
     LICENSE => 'perl',

@@ -18,13 +18,8 @@ use vars qw( %Known %PackSize %Modifier %Pointer $VERSION @ISA );
 
 $VERSION = '0.69';
 
-use Carp;
-BEGIN{
-use Config;
-}
 require Exporter;      # to export the constants to the main:: space
-require DynaLoader;    # to dynuhlode the module.
-@ISA = qw( Exporter DynaLoader );
+@ISA = qw( Exporter);
 
 sub DEBUG {
     if ($Win32::API::DEBUG) {
@@ -66,7 +61,7 @@ foreach (<DATA>) {
 
         # DEBUG "(PM)Type::INIT: PackSize('$packing') => '$size'\n";
         if ($size eq '_P') {
-            $size = $Config{ptrsize};
+            $size = PTRSIZE;
         }
         $PackSize{$packing} = $size;
     }
@@ -160,7 +155,7 @@ sub is_known {
 #const optimize
 BEGIN {
     eval ' sub pointer_pack_type () { "'
-    .($Config{ptrsize} == 8 ? 'Q' : 'L').
+    .(PTRSIZE == 8 ? 'Q' : 'L').
     '" }';
 }
 

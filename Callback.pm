@@ -14,14 +14,12 @@
 package Win32::API::Callback;
 use strict;
 use warnings;
-use vars qw( $VERSION @ISA $Stage2FuncPtrPkd );
+use vars qw( $VERSION $Stage2FuncPtrPkd );
 
 $VERSION = '0.80_02';
 
-
-require Exporter;      # to export the constants to the main:: space
 require DynaLoader;    # to dynuhlode the module.
-@ISA = qw( Exporter DynaLoader );
+@ISA = qw( DynaLoader );
 #use Data::Dumper;
 
 sub DEBUG {
@@ -34,16 +32,12 @@ sub DEBUG {
 }
 
 use Win32::API qw ( WriteMemory ) ;
-use Win32::API::Type;
 use Config;
-#use Win32::API::Struct; #not implemented
-
 
 BEGIN {
     #there is supposed to be 64 bit IVs on 32 bit perl compatibility here
     #but it is untested
-    #Win64 added in 5.7.3
-    eval "sub IVSIZE () { ".length(pack($] >= 5.007003 ? 'J' : 'I' ,0))." }";
+    *IVSIZE = *Win32::API::IVSIZE;
     #what kind of stack processing/calling convention/machine code we needed
     eval "sub ISX64 () { ".(Win32::API::PTRSIZE() == 8 ?  1 : 0)." }";
     eval 'sub OPV () {'.$].'}';

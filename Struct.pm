@@ -11,13 +11,8 @@ use warnings;
 use vars qw( $VERSION @ISA );
 $VERSION = '0.65';
 
-use Carp;
-use Win32::API::Type;
-use Config;
-
 require Exporter;
-require DynaLoader;
-@ISA = qw(Exporter DynaLoader);
+@ISA = qw(Exporter);
 
 my %Known = ();
 
@@ -28,6 +23,37 @@ sub DEBUG {
     else {
         return 0;
     }
+}
+#package main;
+#
+#sub userlazyapisub2{
+#    userlazyapisub();
+#}
+#sub userlazyapisub {
+#    Win32::API::Struct::lazyapisub();
+#}
+#
+#sub userapisub {
+#    Win32::API::Struct::apisub();
+#}
+#
+#package Win32::API::Struct;
+#
+#sub lazyapisub {
+#    lazycarp('bad');
+#}
+#sub apisub {
+#    require Carp;
+#    Carp::carp('bad');
+#}
+sub lazycarp {
+    require Carp;
+    Carp::carp(@_);
+}
+
+sub lazycroak {
+    require Carp;
+    Carp::croak(@_);
 }
 
 sub typedef {
@@ -45,7 +71,7 @@ sub typedef {
 #http://perlmonks.org/?node_id=978468, not catching the type not found here,
 #will lead to a div 0 later
         if(@recog_arr != 3){ 
-            carp "Win32::API::Struct::typedef: unknown member type=\"$type\", name=\"$name\"";
+            lazycarp "Win32::API::Struct::typedef: unknown member type=\"$type\", name=\"$name\"";
             return undef;
         }
         push(@{$self->{typedef}}, [@recog_arr]);
@@ -68,7 +94,7 @@ sub ck_type {
     #check if proto can have * chopped off to convert to base struct name
     $proto =~ s/\s*\*$//;
     return if $proto eq $param;
-    croak("Win32::API::Call: supplied type (LP)\"".
+    lazycroak("Win32::API::Call: supplied type (LP)\"".
           $param."\"( *) doesn't match type \"".
           $_[1]."\" for parameter ".
           $_[2]." ");
@@ -109,7 +135,7 @@ sub new {
         if (is_known($_[0])) {
             DEBUG "(PM)Struct::new: got '$_[0]'\n";
             if( ! defined ($self->{typedef} = $Known{$_[0]}->{typedef})){
-                carp 'Win32::API::Struct::new: unknown type="'.$_[0].'"';
+                lazycarp 'Win32::API::Struct::new: unknown type="'.$_[0].'"';
                 return undef;
             }
             foreach my $member (@{$self->{typedef}}) {
@@ -122,7 +148,7 @@ sub new {
             $self->{__typedef__} = $_[0];
         }
         else {
-            carp "Unknown Win32::API::Struct '$_[0]'";
+            lazycarp "Unknown Win32::API::Struct '$_[0]'";
             return undef;
         }
     }
@@ -132,7 +158,7 @@ sub new {
 
             # print "new: found member $name ($type)\n";
             if (not exists $Win32::API::Type::Known{$type}) {
-                carp "Unknown Win32::API::Struct type '$type'";
+                lazycarp "Unknown Win32::API::Struct type '$type'";
                 return undef;
             }
             else {
@@ -392,7 +418,7 @@ my $SVMemberRef = \$recipient->{$item};
 
 if(!$newstructptr){ #new ptr is null
     if($oldstructptr != $newstructptr){ #old ptr was true
-        carp "Win32::API::Struct::Unpack struct pointer".
+        lazycarp "Win32::API::Struct::Unpack struct pointer".
         " member \"".$item."\" was changed by C function,".
         " possible resource leak";
     }
@@ -400,7 +426,7 @@ if(!$newstructptr){ #new ptr is null
 }
 else{ #new ptr is true
     if($oldstructptr != $newstructptr){#old ptr was true, or null, but has changed, leak warning
-        carp "Win32::API::Struct::Unpack struct pointer".
+        lazycarp "Win32::API::Struct::Unpack struct pointer".
         " member \"".$item."\" was changed by C function,".
         " possible resource leak";
     }#create a ::Struct if the slice is undef, user had the slice set to undef
