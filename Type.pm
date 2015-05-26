@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( %Known %PackSize %Modifier %Pointer $VERSION );
 
-$VERSION = '0.69';
+$VERSION = '0.70';
 
 #import DEBUG sub
 sub DEBUG;

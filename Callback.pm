@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( $VERSION $Stage2FuncPtrPkd );
 
-$VERSION = '0.80_02';
+$VERSION = '0.81';
 
 #require XSLoader;    # to dynuhlode the module. #already loaded by Win32::API
 #use Data::Dumper;

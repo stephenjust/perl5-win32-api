@@ -1,6 +1,6 @@
 History of Win32::API perl extension.
 
-2015-0?-??  Win32::API v0.80_03    bulk88
+2015-05-26  Win32::API v0.81    bulk88
    - Fixed #104426, GCC 32 bit build uses real assembly code and a real
      (GNU) assembler instead of inline assembly, Borland C support, if it still
      worked, has been removed
