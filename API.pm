@@ -81,7 +81,7 @@ my %Procedures = ();
 # dynamically load in the API extension module.
 # BEGIN required for constant subs in BOOT:
 BEGIN {
-    $VERSION = '0.81';
+    $VERSION = '0.82';
     require XSLoader;
     XSLoader::load 'Win32::API', $VERSION;
 }

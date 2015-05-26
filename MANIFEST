@@ -21,6 +21,7 @@ API_test64.dll
 Call.c
 call_asm_x64_gnu.s
 call_asm_x64_msvc.asm
+call_asm_x86_gnu.s
 call_asm_x86_msvc.asm
 call_i686.c
 call_i686.h
