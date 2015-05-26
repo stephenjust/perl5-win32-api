@@ -73,8 +73,8 @@ t/v69.t
 t/v70.t
 t/v71.t
 t/v76.t
-Test.pm
 TODO
 Type.pm
 TYPEMAP
 typemap56
+W32ATest.pm

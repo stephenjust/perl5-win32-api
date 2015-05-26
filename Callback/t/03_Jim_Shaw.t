@@ -50,7 +50,8 @@ use Data::Dumper;
 
 use_ok('Win32::API');
 use_ok('Win32::API::Callback');
-use_ok('Win32::API::Test');
+BEGIN {push(@INC, '..')}
+use_ok('W32ATest');
 
 ok(1, 'loaded');
 

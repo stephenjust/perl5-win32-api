@@ -9,7 +9,7 @@ use strict;
 
 use Test::More;
 use Math::Int64 ('uint64', 'uint64_to_number');
-use Win32::API::Test;
+use W32ATest;
 use Config;
 
 plan tests => 7;

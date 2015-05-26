@@ -10,7 +10,7 @@ use strict;
 use File::Spec;
 use Test::More;
 use Math::Int64 qw( hex_to_int64 );
-use Win32::API::Test;
+use W32ATest;
 
 plan tests => 17;
 use vars qw($function $result $return $test_dll );

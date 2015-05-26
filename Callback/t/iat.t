@@ -18,10 +18,11 @@ use vars qw(
 );
 BEGIN {
     eval "sub PTR_SIZE () { ".$Config{ptrsize}." }";
+    push(@INC, '..'); #for W32ATest
 }
 use Win32::API ('WriteMemory', 'ReadMemory', 'IsBadReadPtr');
 use Win32::API::Callback;
-use Win32::API::Test;
+use W32ATest;
 use Win32;
 
 

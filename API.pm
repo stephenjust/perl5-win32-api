@@ -21,7 +21,7 @@ BEGIN {
 
     sub ISCYG ();
     if($^O eq 'cygwin') {
-        no warnings 'uninitialized';
+        BEGIN{warnings->unimport('uninitialized')}
         die "Win32::API on Cygwin requires the cygpath tool on PATH"
             if index(`cygpath --help`,'Usage: cygpath') == -1;
         require File::Basename;
@@ -539,7 +539,7 @@ sub parse_prototype {
                 ($type, $name) = ($1.(defined($2)? $2:''), $3);
             }
             {
-                no warnings 'uninitialized';
+                BEGIN{warnings->unimport('uninitialized')}
                 if($type eq '') {goto BADPROTO;} #something very wrong, bail out
             }
             my $packing = Win32::API::Type::packing($type);

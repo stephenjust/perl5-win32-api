@@ -28,7 +28,7 @@ use vars qw(
 );
 
 use_ok('Win32::API');
-use Win32::API::Test;
+use W32ATest;
 
 ok(1, 'loaded');
 

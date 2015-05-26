@@ -12,6 +12,8 @@ History of Win32::API perl extension.
      but didn't actually work and was ignored from a BEGIN block
    - Debug mode code is now compiled away using constant folding, undocumented
      runtime setting of $DEBUG has been removed
+   - Win32::API::Test is no longer installed, it is never needed outside of
+     testing, this saves disk space
 
 2015-05-14  Win32::API v0.80_02    bulk88
    - Improvements to debugging mode for RT #104426

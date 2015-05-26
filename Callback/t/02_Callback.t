@@ -19,10 +19,11 @@ use vars qw(
 
 BEGIN {
     eval "sub PTR_SIZE () { ".length(pack(($] <= 5.007002 ? 'L':'J'),0))." }";
+    push(@INC, '..'); #for W32ATest
 }
 use_ok('Win32::API');
 use_ok('Win32::API::Callback');
-use Win32::API::Test;
+use W32ATest;
 
 
 ok(1, 'loaded');

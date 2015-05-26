@@ -22,7 +22,7 @@ plan tests => 36;
 use vars qw($function $function2 $result $test_dll $input $ptr);
 
 use_ok('Win32::API', qw( ReadMemory IsBadReadPtr MoveMemory WriteMemory));
-use_ok('Win32::API::Test');
+use_ok('W32ATest');
 use_ok('Win32');
 
 

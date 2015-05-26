@@ -11,7 +11,7 @@ use strict;
 use File::Spec;
 use Test::More;
 use Config;
-use Win32::API::Test;
+use W32ATest;
 plan tests => 58;
 use vars qw($function $result $input $test_dll $ptr);
 

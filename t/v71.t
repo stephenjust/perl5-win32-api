@@ -9,7 +9,7 @@ use strict;
 
 use File::Spec;
 use Test::More;
-use Win32::API::Test;
+use W32ATest;
 BEGIN {
     eval { require Encode; };
     if($@){

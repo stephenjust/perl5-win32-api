@@ -2,9 +2,9 @@
 use strict;
 use warnings;
 
-BEGIN { eval{ require threads} }
+BEGIN { eval{ require threads}; push(@INC, '..') }
 use Win32::API::Callback;
-use Win32::API::Test;
+use W32ATest;
 use Test::More;
 use Config;
 

@@ -10,7 +10,7 @@ die qq(OS unsupported\n)
 
 # Must be a better way to do this, surely...
 use Config;
-require './Test.pm';
+require './W32ATest.pm';
 
 my $is_64bit_build = ($Config{ptrsize} == 8);
 my $is_msvc_compiler = ($Config{cc} =~ /cl/);
@@ -56,7 +56,6 @@ WriteMakefile1(
         'API.pm'      => '$(INST_LIBDIR)/API.pm',
         'Type.pm'     => '$(INST_LIBDIR)/API/Type.pm',
         'Struct.pm'   => '$(INST_LIBDIR)/API/Struct.pm',
-        'Test.pm'     => '$(INST_LIBDIR)/API/Test.pm',
         'Callback.pm' => '$(INST_LIBDIR)/API/Callback.pm',
         'IATPatch.pod'=> '$(INST_LIBDIR)/API/Callback/IATPatch.pod'
 	},

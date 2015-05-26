@@ -327,7 +327,7 @@ sub Pack {
     if($_[0]){ #Pack() on a new struct, without slice set, will cause lots of uninit
         #warnings, sometimes its intentional to set up buffer recipients for a
         #future UnPack()
-        no warnings 'uninitialized';
+        BEGIN{warnings->unimport('uninitialized')}
         $self->{buffer} = pack($packing, @$items);
     }
     else{

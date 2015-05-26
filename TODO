@@ -46,7 +46,7 @@ bulk88's comments
     in the SV thats part of the HEK using the shared string table system,
     and by precalculating the hash number for that string per interp.
     I (bulk88) have done this before.
-16. Stop installing Test.pm on users computers, delete existing copies.
+16. *DONE* Stop installing Test.pm on users computers, delete existing copies.
 17. If someone asks for fastcall/thiscall on x86, add it.
 18. If someone asks for MSVC C++ name demangling and supplies a patch, add it.
     No reason other it being extremely extremely difficult that C++ can't be
