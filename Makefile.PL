@@ -31,7 +31,7 @@ WriteMakefile1(
     LICENSE => 'perl',
     META_MERGE => {
         resources => {
-            repository => 'https://github.com/cosimo/perl5-win32-api',
+            repository => 'https://github.com/bulk88/perl5-win32-api',
         },
         keywords => ['win32','api','dll','libraries'],
         recommends => {'Math::Int64' => 0}
