@@ -75,12 +75,18 @@ BOOL WINAPI _DllMainCRTStartup(
 }
 #endif
 
+#pragma pack(push)
+#pragma pack(push, 1)
 #ifdef _MSC_VER
 extern __declspec(selectany) /*enable comdat folding for this symbol in msvc*/
 #endif
 PORTALIGN(1) const char bad_esp_msg [] = "Win32::API a function was called with the wrong prototype "
 "and caused a C stack inconsistency EBP=%p ESP=%p" ;
+#pragma pack(pop)
+#pragma pack(pop)
 
+#pragma pack(push)
+#pragma pack(push, 1)
 #ifdef _MSC_VER
 extern __declspec(selectany) /*enable comdat folding for this symbol in msvc*/
 #endif
@@ -93,6 +99,9 @@ PORTALIGN(1) const struct {
     "Win32::API::Type::Pack",
     "Win32::API::Struct::ck_type"
 };
+#pragma pack(pop)
+#pragma pack(pop)
+
 #define PARAM3_UNPACK ((int)((char*)(&Param3FuncNames.Unpack) - (char*)&Param3FuncNames))
 #define PARAM3_PACK ((int)((char*)(&Param3FuncNames.Pack) - (char*)&Param3FuncNames))
 #define PARAM3_CK_TYPE ((int)((char*)(&Param3FuncNames.ck_type) - (char*)&Param3FuncNames))
@@ -290,6 +299,17 @@ BOOT:
     DUMPMEM(double,d);
     printf("(XS)Win32::API::boot: APIPARAM total size=%u\n", sizeof(APIPARAM));
 #undef DUMPMEM
+#define  DUMPMEM(type,name) printf( \
+    "(XS)Win32::API::boot: APICONTROL layout, member %s, SzOf %u, offset %u\n" \
+    , #type " " #name, sizeof(((APICONTROL *)0)->name), offsetof(APICONTROL, name));
+    DUMPMEM(U32,whole_bf);
+    DUMPMEM(U32,inparamlen);
+    DUMPMEM(FARPROC, ApiFunction);
+    DUMPMEM(SV *, api);
+    DUMPMEM(AV *, intypes);
+    DUMPMEM(APIPARAM, param);
+#undef DUMPMEM
+    printf("(XS)Win32::API::boot: APICONTROL total size=%u\n", sizeof(APICONTROL));
 #endif	
     //this is not secure against malicious overruns
     //QPC doesn't like unaligned pointers

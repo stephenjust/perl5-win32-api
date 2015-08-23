@@ -47,7 +47,15 @@
 #ifdef __GNUC__
 #  define PORTALIGN(x) __attribute__((aligned(x)))
 #elif defined(_MSC_VER)
-#  define PORTALIGN(x) __declspec(align(x))
+#  if _MSC_VER > 1200
+#    define PORTALIGN(x) __declspec(align(x))
+#  else
+/* have to manually add padding on VC 6, __declspec(align doesn't exist
+   and #pragma pack can only decrease alignment not increase it
+   C2485: 'align' : unrecognized extended attribute
+   */
+#    define PORTALIGN(x)
+#  endif
 #else
 #  error unknown compiler
 #endif
@@ -114,6 +122,11 @@ typedef unsigned long long ulong_ptr;
 #else
 typedef long long_ptr;
 typedef unsigned long ulong_ptr;
+#endif
+
+/* VC 6 doesn't know what a DWORD_PTR is */
+#if defined(_MSC_VER) && _MSC_VER < 1300
+typedef DWORD DWORD_PTR;
 #endif
 
 #define T_VOID				0
@@ -238,7 +251,11 @@ typedef struct {
     /* this AV is here for no func call look up of it, intypes may be NULL,
        refcnt owned by obj's hidden hash*/
     AV * intypes;
-    /* a padding hole here of unknown size */
+    /* a padding hole here, VC6 doesn't support increasing alignment */
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+    U32 padding1;
+    U32 padding2;
+#endif
     PORTALIGN(16) APIPARAM param;
 } APICONTROL;
 
