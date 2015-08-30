@@ -40,3 +40,7 @@ EXPORTS
   setlasterror_loop
   is_null
   cc_name_str
+  MyGetTimeZoneInformation
+  MySetTimeZoneInformation
+  WriteArrayInStruct
+  WriteWArrayInStruct

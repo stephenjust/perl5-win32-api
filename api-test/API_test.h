@@ -41,6 +41,18 @@ typedef struct {
 }
 SIX_MEMS; //MEMS=members, not memory
 
+typedef struct {
+    unsigned int first;
+    CHAR str [32];
+    unsigned int last;
+} ARR_IN_STRUCT;
+
+typedef struct {
+    unsigned int first;
+    WCHAR str [32];
+    unsigned int last;
+} WARR_IN_STRUCT;
+
 typedef enum _WLAN_CONNECTION_MODE {
     wlan_connection_mode_profile = 0,
     wlan_connection_mode_temporary_profile,

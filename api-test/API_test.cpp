@@ -453,6 +453,87 @@ static const GUID wlanguid  =
     }
 }
 
+
+API_TEST_API DWORD WINAPI
+MyGetTimeZoneInformation(
+    LPTIME_ZONE_INFORMATION lpTimeZoneInformation
+) {
+    if(IsBadWritePtr(lpTimeZoneInformation, sizeof(TIME_ZONE_INFORMATION)))
+        return 0;
+    lpTimeZoneInformation->Bias = 1;
+    memcpy(lpTimeZoneInformation->StandardName,  L"vwxyzvwxyzvwxyzvwxyzvwxyzvwxyzwx",
+           sizeof(L"vwxyzvwxyzvwxyzvwxyzvwxyzvwxyzwx"));
+    lpTimeZoneInformation->StandardDate.wYear = 1;
+    lpTimeZoneInformation->StandardDate.wMonth = 2;
+    lpTimeZoneInformation->StandardDate.wDayOfWeek = 3;
+    lpTimeZoneInformation->StandardDate.wDay = 4;
+    lpTimeZoneInformation->StandardDate.wHour = 5;
+    lpTimeZoneInformation->StandardDate.wMinute = 6;
+    lpTimeZoneInformation->StandardDate.wSecond = 7;
+    lpTimeZoneInformation->StandardDate.wMilliseconds = 8;
+    lpTimeZoneInformation->StandardBias = 2;
+    memcpy(lpTimeZoneInformation->DaylightName,  L"DAYLNDAYLNDAYLNDAYLNDAYLNDAYLNDA",
+           sizeof(L"DAYLNDAYLNDAYLNDAYLNDAYLNDAYLNDA"));
+    lpTimeZoneInformation->DaylightDate.wYear = 1;
+    lpTimeZoneInformation->DaylightDate.wMonth = 2;
+    lpTimeZoneInformation->DaylightDate.wDayOfWeek = 3;
+    lpTimeZoneInformation->DaylightDate.wDay = 4;
+    lpTimeZoneInformation->DaylightDate.wHour = 5;
+    lpTimeZoneInformation->DaylightDate.wMinute = 6;
+    lpTimeZoneInformation->DaylightDate.wSecond = 7;
+    lpTimeZoneInformation->DaylightDate.wMilliseconds = 8;
+    lpTimeZoneInformation->DaylightBias = 3;
+    return 1;
+}
+
+API_TEST_API DWORD WINAPI
+MySetTimeZoneInformation(
+    LPTIME_ZONE_INFORMATION lpTimeZoneInformation
+) {
+    if(IsBadReadPtr(lpTimeZoneInformation, sizeof(TIME_ZONE_INFORMATION)))
+        return 0;
+    if( lpTimeZoneInformation->Bias == 1
+        && memcmp(lpTimeZoneInformation->StandardName,  L"vwxyzvwxyzvwxyzvwxyzvwxyzvwxyzwx",
+              sizeof(L"vwxyzvwxyzvwxyzvwxyzvwxyzvwxyzwx")-2) == 0
+        && lpTimeZoneInformation->StandardDate.wYear == 1
+        && lpTimeZoneInformation->StandardDate.wMonth == 2
+        && lpTimeZoneInformation->StandardDate.wDayOfWeek == 3
+        && lpTimeZoneInformation->StandardDate.wDay == 4
+        && lpTimeZoneInformation->StandardDate.wHour == 5
+        && lpTimeZoneInformation->StandardDate.wMinute == 6
+        && lpTimeZoneInformation->StandardDate.wSecond == 7
+        && lpTimeZoneInformation->StandardDate.wMilliseconds == 8
+        && lpTimeZoneInformation->StandardBias == 2
+        && memcmp(lpTimeZoneInformation->DaylightName,  L"DAYLNDAYLNDAYLNDAYLNDAYLNDAYLNDA",
+              sizeof(L"DAYLNDAYLNDAYLNDAYLNDAYLNDAYLNDA")-2) == 0
+        && lpTimeZoneInformation->DaylightDate.wYear == 1
+        && lpTimeZoneInformation->DaylightDate.wMonth == 2
+        && lpTimeZoneInformation->DaylightDate.wDayOfWeek == 3
+        && lpTimeZoneInformation->DaylightDate.wDay == 4
+        && lpTimeZoneInformation->DaylightDate.wHour == 5
+        && lpTimeZoneInformation->DaylightDate.wMinute == 6
+        && lpTimeZoneInformation->DaylightDate.wSecond == 7
+        && lpTimeZoneInformation->DaylightDate.wMilliseconds == 8
+        && lpTimeZoneInformation->DaylightBias == 3)
+        return 1;
+    else
+        return 0;
+}
+
+API_TEST_API void __stdcall WriteArrayInStruct(ARR_IN_STRUCT * s){
+    s->first = 0xFFFFFFFF;
+    memcpy(s->str, "12345123451234512345\0\0\0\0\0\0\0\0\0\0\0\0",
+            sizeof("12345123451234512345\0\0\0\0\0\0\0\0\0\0\0\0")-1);
+    s->last = 0xFFFFFFFF;
+}
+
+API_TEST_API void __stdcall WriteWArrayInStruct(WARR_IN_STRUCT * s){
+    s->first = 0xFFFFFFFF;
+    memcpy(s->str, L"12345123451234512345\0\0\0\0\0\0\0\0\0\0\0\0",
+            sizeof(L"12345123451234512345\0\0\0\0\0\0\0\0\0\0\0\0")-2);
+    s->last = 0xFFFFFFFF;
+}
+
 API_TEST_API BOOL __stdcall Take6MemsStruct( SIX_MEMS str){
     if(str.one == 1
        && str.two == 2
