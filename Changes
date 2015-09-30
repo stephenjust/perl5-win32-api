@@ -1,6 +1,6 @@
 History of Win32::API perl extension.
 
-2015-??-??  Win32::API v0.??    bulk88
+2015-09-29  Win32::API v0.83_01    bulk88
    - Fixed, VC 6 build broken due to C syntax error since v0.76_02
      http://git.io/vcZ08
    - Revised api-test for more binary diff stability between rebuilds

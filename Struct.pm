@@ -9,7 +9,7 @@ package Win32::API::Struct;
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = '0.66';
+$VERSION = '0.67';
 
 my %Known = ();
 
