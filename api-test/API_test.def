@@ -39,3 +39,4 @@ EXPORTS
   GetTestDllHModule
   setlasterror_loop
   is_null
+  cc_name_str

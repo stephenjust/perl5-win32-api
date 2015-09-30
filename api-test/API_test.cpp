@@ -3,22 +3,38 @@
 //
 // $Id$
 
-#pragma pack(1)
-
-#include "stdafx.h"
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
 #include <malloc.h>
 #include <stdio.h>
 #include "API_test.h"
 
+#ifdef _WIN64
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232
+#else  /* _WIN64 */
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif  /* _WIN64 */
+
+extern "C" DWORD_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
+extern "C" __declspec(dllimport) DWORD_PTR rtc_security_cookie;
+
 HMODULE g_hModule = NULL;
-BOOL APIENTRY DllMain( HANDLE hModule, 
-                       DWORD  ul_reason_for_call, 
-                       LPVOID lpReserved
+BOOL APIENTRY ApiDllMain(   HANDLE hModule,
+                            DWORD  ul_reason_for_call,
+                            LPVOID lpReserved
 					 )
 {
     switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
+/* it seems that __security_cookie cant be imported across DLLs,
+   probably because an imported var has different machine code
+   (2 reads instructions) vs a same DLL var which has 1 read, and VC doesnt
+   listen to any C code declarations about __security_cookie and is hard coded
+   to always use the 1 read variant
+   API_test error LNK2019: unresolved external symbol ___security_cookie referenced in function _printf
+*/
+	    __security_cookie = rtc_security_cookie;
             g_hModule = (HMODULE)hModule;
 		case DLL_THREAD_ATTACH:
 		case DLL_THREAD_DETACH:
@@ -28,6 +44,36 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     return TRUE;
 }
 
+extern "C" __declspec(selectany) DWORD _fltused = 0;
+
+/* CharUpperA not so efficient, calls LCMapStringW internally
+   and LCMapStringW is slow compared to CRT toupper for low ascii */
+#define toupper(x) (char)CharUpperA((LPTSTR)x)
+#define sprintf wsprintf
+
+int printf(const char * format, ...)
+{
+    char buf[1024];
+    int ret;
+    DWORD NumberOfBytesWritten;
+    va_list args;
+
+    va_start(args, format);
+    /* wvsprintf is from user32.dll not any CRT,
+    this makes API_test.dll almost CRT-free */
+    ret = wvsprintf(buf, format, args );
+    va_end( args );
+
+    WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buf, ret,&NumberOfBytesWritten, NULL);
+    /* not sure if ret is 100% accurate as real printf */
+    return ret;
+}
+
+/* know which VC version was used to build this DLL, helps in reproducibility
+   and keeps git diff smallers when you use the same VC version */
+#define stringify(x) #x
+#define stringifym(x) stringify(x)
+extern API_TEST_API const char cc_name_str [] = "VC " stringifym(_MSC_VER);
 
 // This is an example of an exported variable
 API_TEST_API int nAPI_test=0;
@@ -400,9 +446,10 @@ static const GUID wlanguid  =
 #endif
        ){
         DebugBreak();
+	return ERROR_INVALID_ADDRESS;
     }
     else{
-        return ERROR_SUCCESS;
+	return ERROR_SUCCESS;
     }
 }
 
@@ -477,3 +524,30 @@ API_TEST_API int __stdcall is_null(void * ptr){
     if(!ptr) return TRUE;
     else return FALSE;
 }
+
+/* enlarge .text from Virtual Size 0xF34 which is pretty close to 0x1000,
+   to 0x1024 Virtual size so that .text is 0x1400 bytes long in the PE file to
+   allow room for API_test.dll to grow with large git diffs, .rdata starts at
+   0x3000 instead of 0x2000 with this padding, which means pointers to .rdata
+   won't change in future recompiles of this dll because there is atleast
+   4 KB of space between the end of .text and start of .rdata
+
+   The amount of nulls bytes here can be reduced in the future if API_test
+   gains new functions
+*/
+#pragma code_seg(push, ".text")
+__declspec(allocate(".text")) char code_padding []=
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+#pragma code_seg(pop)

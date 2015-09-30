@@ -6,13 +6,12 @@ api-test/API_test.h
 api-test/API_test.sln
 api-test/API_test.suo
 api-test/API_test.vcproj
-api-test/Debug/API_test.dll
-api-test/Debug/API_test.lib
+api-test/builddll.pl
 api-test/Makefile
-api-test/Release/API_test.dll
-api-test/Release/API_test.lib
-api-test/StdAfx.cpp
-api-test/StdAfx.h
+api-test/rtc.cpp
+api-test/rtc.def
+api-test/rtc.vcproj
+api-test/rtc64.def
 API.h
 API.pm
 API.xs
@@ -43,6 +42,8 @@ MANIFEST.SKIP
 META.yml
 ppport.h
 README
+rtc.dll
+rtc64.dll
 samples/callback1.pl
 samples/callback2.pl
 samples/callback3.pl

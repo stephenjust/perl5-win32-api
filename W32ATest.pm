@@ -86,17 +86,26 @@ sub compiler_version_from_shell () {
 sub find_test_dll {
     require File::Spec;
     my $dll;
-    my $default_dll_name =
+    my $test_dll_name =
         is_perl_64bit()
         ? 'API_test64.dll'
         : 'API_test.dll';
 
-    my $dll_name = $_[0] || $default_dll_name;
+    my $dll_name = $_[0] || $test_dll_name;
 
     my @paths = qw(.. ../t ../t/dll . ./dll ./t/dll);
     while (my $path = shift @paths) {
         $dll = File::Spec->catfile($path, $dll_name);
-        return $dll if -s $dll;
+        if(-s $dll) { #preload the rtc dll to avoid changing PATH
+            #leak the DLL, this is just unit testing
+            die "can't load rtc DLL for API_test DLL"
+                if ! Win32::API::LoadLibrary(
+                    File::Spec->catfile($path,
+                        is_perl_64bit()
+                        ? 'rtc64.dll'
+                        : 'rtc.dll'));
+            return $dll;
+        }
     }
     return (undef);
 }
