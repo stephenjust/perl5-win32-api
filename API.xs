@@ -610,6 +610,32 @@ PPCODE:
     memcpy((void *)destPtr, (void *)sourcePV, length);
     return;
 
+void
+_TruncateToWideNull(sv)
+    SV * sv
+PREINIT:
+    WCHAR * str;
+    WCHAR * strend;
+/* VC 2003 keeps this stack var's liveness around too much due bad code gen because
+   of &len in SvPV_force, use a 2nd var for the rest of the body so the var can be registered */
+    STRLEN lenp;
+    STRLEN len;
+PPCODE:
+    PUTBACK;
+    str = (WCHAR *) SvPV_force(sv, lenp);
+    len = lenp;
+    if(len & 0x01)
+        croak("Win32::API::_TruncateToWideNull: string with utf16 has an odd number of bytes");
+    strend = (WCHAR *)((char*)str+len);
+    /* wmemchr isn't available from C mode with VC, its an inline C++ function,
+       not a CRT DLL export, so make our own */
+    for(; str < strend && *str != 0; str++) {};
+    len = len - ((size_t)strend - (size_t)str);
+    if(SvCUR(sv) != len) {
+        SvCUR_set(sv, len);
+        SvSETMAGIC(sv);
+    }
+    return;
 
 void
 MoveMemory(Destination, Source, Length)

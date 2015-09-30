@@ -58,7 +58,20 @@ sub typedef {
         typedef => [],
     };
     while (defined($type = shift)) {
+        #not compatible with "unsigned foo;"
+        $type .= ' '.shift if $type eq 'unsigned' || $type eq 'signed';
         $name = shift;
+        #"int foo [8];" instead of "int foo[8];" so tack on the array count
+        {
+            BEGIN{warnings->unimport('uninitialized')}
+            $name .= shift if substr($_[0],0,1) eq '[';
+        }
+        #typedef() takes a list, not a str, for backcompat, this can't be changed
+        #but, should typedef() keep shifting slices until it finds ";" or not?
+        #all the POD examples have ;s, but they are actually optional, should it
+        #be assumed that existing code was nice and used ;s or not? backcompat
+        #breaks if you say ;-less member defs should be allowed and aren't a user
+        #mistake
         $name =~ s/;$//;
         @recog_arr = recognize($type, $name);
 #http://perlmonks.org/?node_id=978468, not catching the type not found here,
@@ -274,9 +287,10 @@ sub getPack {
         }
         else {
             my $repeat = 1;
+            $type_size  = Win32::API::Type::sizeof($orig);
             if ($type =~ /\w\*(\d+)/) {
                 $repeat = $1;
-                $type = "a$repeat";
+                $type = 'a'.($repeat*$type_size);
             }
 
             DEBUG "(PM)Struct::getPack($self->{__typedef__}) ++ $type\n" if DEBUGCONST;
@@ -302,7 +316,6 @@ sub getPack {
                 push(@items, $self->{$name});
             }
             push(@recipients, $self);
-            $type_size  = Win32::API::Type::sizeof($orig);
             $type_align = (($packed_size + $type_size) % $type_size);
             $packing .= "x" x $type_align . $type;
             $packed_size += ( $type_size * $repeat ) + $type_align;
@@ -363,13 +376,16 @@ sub getUnpack {
                 $orig_type = $type;
                 $type = Win32::API::Type::pointer_pack_type();
             }
+            $type_size  = Win32::API::Type::sizeof($orig);
             my $repeat = 1;
-            if ($type =~ /\w\*(\d+)/) {
+            if ($type =~ /\w\*(\d+)/) { #some kind of array
                 $repeat = $1;
-                $type = "Z$repeat";
+                $type =
+                    $type_size == 1 ?
+                        'Z'.$repeat #have pack truncate to NULL char
+                        :'a'.($repeat*$type_size); #manually truncate to wide NULL char later
             }
             DEBUG "(PM)Struct::getUnpack($self->{__typedef__}) ++ $type\n" if DEBUGCONST;
-            $type_size  = Win32::API::Type::sizeof($orig);
             $type_align = (($packed_size + $type_size) % $type_size);
             $packing .= "x" x $type_align . $type;
             $packed_size += ( $type_size * $repeat ) + $type_align;
@@ -396,13 +412,14 @@ sub Unpack {
     foreach my $i (0 .. $#$items) {
         my $recipient = $self->{buffer_recipients}->[$i];
         my $item = $$items[$i];
+        my $type = $$types[$i];
         DEBUG "(PM)Struct::Unpack: %s(%s) = '%s' (0x%08x)\n",
             $recipient->{__typedef__},
             $item,
             $itemvalue[$i],
             $itemvalue[$i],
             if DEBUGCONST;
-        if($$types[$i] eq 'T'){
+        if($type eq 'T'){
 my $oldstructptr = pop(@{$self->{buffer_ptrs}});
 my $newstructptr = $itemvalue[$i];
 my $SVMemberRef = \$recipient->{$item};
@@ -439,7 +456,10 @@ else{ #new ptr is true
 }
 }
     else{ #not a struct ptr
-        $recipient->{$item} = $itemvalue[$i];
+        my $itemvalueref = \$itemvalue[$i];
+        Win32::API::_TruncateToWideNull($$itemvalueref)
+            if substr($type,0,1) eq 'a' && length($type) > 1;
+        $recipient->{$item} = $$itemvalueref;
 
         # DEBUG "(PM)Struct::Unpack: self.items[$i] = $self->{$$items[$i]}\n";
     }

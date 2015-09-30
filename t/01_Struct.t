@@ -19,7 +19,7 @@ BEGIN {
     eval 'sub OPV () {'.$].'}';
     sub OPV();
 }
-plan tests => 17;
+plan tests => 50;
 
 use vars qw(
     $function
@@ -267,4 +267,143 @@ WlanConnect(
        , "Type::typedef worked");
     $struct = Win32::API::Struct->new('LPEIGHT_CHAR_ARR');
     ok(! defined $struct, "Type::typedef doesn't change the ::Struct db");
+}
+{
+    Win32::API::Struct->typedef(SYSTEMTIME => qw(
+      WORD wYear;
+      WORD wMonth;
+      WORD wDayOfWeek;
+      WORD wDay;
+      WORD wHour;
+      WORD wMinute;
+      WORD wSecond;
+      WORD wMilliseconds;
+    ));
+    Win32::API::Struct->typedef(TIME_ZONE_INFORMATION => qw(
+      LONG       Bias;
+      WCHAR      StandardName[32];
+      SYSTEMTIME StandardDate;
+      LONG       StandardBias;
+      WCHAR      DaylightName[32];
+      SYSTEMTIME DaylightDate;
+      LONG       DaylightBias;
+    ));
+    #test CPAN #92971, memory corruption when WCHAR array inline in a struct
+    $function = Win32::API::More->new(
+      $test_dll, 'DWORD WINAPI MyGetTimeZoneInformation( LPTIME_ZONE_INFORMATION lpTimeZoneInformation );'
+    );
+sub fillSYSTEMTIME {
+    my $st = shift;
+    $st->{wYear} = 0;
+    $st->{wMonth} = 0;
+    $st->{wDayOfWeek} = 0;
+    $st->{wDay} = 0;
+    $st->{wHour} = 0;
+    $st->{wMinute} = 0;
+    $st->{wSecond} = 0;
+    $st->{wMilliseconds} = 0;
+}
+    my $tzi = Win32::API::Struct->new('TIME_ZONE_INFORMATION');
+    fillSYSTEMTIME($tzi->{StandardDate});
+    fillSYSTEMTIME($tzi->{DaylightDate});
+    $tzi->{StandardName} = '';
+    $tzi->{DaylightName} = '';
+    $tzi->{Bias} = 0;
+    $tzi->{StandardBias} = 0;
+    $tzi->{DaylightBias} = 0;
+    ok($function->Call($tzi), "MyGetTimeZoneInformation call works");
+    ok($tzi->{Bias} ==  1, "MGTZI Bias");
+    ok($tzi->{StandardName} eq "v\x00w\x00x\x00y\x00z\x00v\x00w\x00x\x00y\x00z\x00v\x00w\x00x\x00y\x00z\x00v\x00w\x00x\x00y\x00z\x00v\x00w\x00x\x00y\x00z\x00v\x00w\x00x\x00y\x00z\x00w\x00x\x00"
+        , "MGTZI StandardName");
+    ok($tzi->{StandardDate}{wYear} == 1, "MGTZI StandardDate wYear");
+    ok($tzi->{StandardDate}{wMonth} == 2, "MGTZI StandardDate wMonth");
+    ok($tzi->{StandardDate}{wDayOfWeek} == 3, "MGTZI StandardDate wDayOfWeek");
+    ok($tzi->{StandardDate}{wDay} == 4, "MGTZI StandardDate wDay");
+    ok($tzi->{StandardDate}{wHour} == 5, "MGTZI StandardDate wHour");
+    ok($tzi->{StandardDate}{wMinute} == 6, "MGTZI StandardDate wMinute");
+    ok($tzi->{StandardDate}{wSecond} == 7, "MGTZI StandardDate wSecond");
+    ok($tzi->{StandardDate}{wMilliseconds} == 8, "MGTZI StandardDate wMilliseconds");
+    ok($tzi->{StandardBias} == 2, "MGTZI StandardBias");
+    ok($tzi->{DaylightName} eq "D\x00A\x00Y\x00L\x00N\x00D\x00A\x00Y\x00L\x00N\x00D\x00A\x00Y\x00L\x00N\x00D\x00A\x00Y\x00L\x00N\x00D\x00A\x00Y\x00L\x00N\x00D\x00A\x00Y\x00L\x00N\x00D\x00A\x00"
+        , "MGTZI DaylightName");
+    ok($tzi->{DaylightDate}{wYear} == 1, "MGTZI DaylightDate wYear");
+    ok($tzi->{DaylightDate}{wMonth} == 2, "MGTZI DaylightDate wMonth");
+    ok($tzi->{DaylightDate}{wDayOfWeek} == 3, "MGTZI DaylightDate wDayOfWeek");
+    ok($tzi->{DaylightDate}{wDay} == 4, "MGTZI DaylightDate wDay");
+    ok($tzi->{DaylightDate}{wHour} == 5, "MGTZI DaylightDate wHour");
+    ok($tzi->{DaylightDate}{wMinute} == 6, "MGTZI DaylightDate wMinute");
+    ok($tzi->{DaylightDate}{wSecond} == 7, "MGTZI DaylightDate wSecond");
+    ok($tzi->{DaylightDate}{wMilliseconds} == 8, "MGTZI DaylightDate wMilliseconds");
+    ok($tzi->{DaylightBias} == 3, "MGTZI DaylightBias");
+
+    #make a fresh one
+    $tzi = Win32::API::Struct->new('TIME_ZONE_INFORMATION');
+    $tzi->{Bias} = 1;
+    $tzi->{StandardName} = Encode::encode("UTF-16LE","vwxyzvwxyzvwxyzvwxyzvwxyzvwxyzwx");
+    $tzi->{StandardDate}{wYear} = 1;
+    $tzi->{StandardDate}{wMonth} = 2;
+    $tzi->{StandardDate}{wDayOfWeek} = 3;
+    $tzi->{StandardDate}{wDay} = 4;
+    $tzi->{StandardDate}{wHour} = 5;
+    $tzi->{StandardDate}{wMinute} = 6;
+    $tzi->{StandardDate}{wSecond} = 7;
+    $tzi->{StandardDate}{wMilliseconds} = 8;
+    $tzi->{StandardBias} = 2;
+    $tzi->{DaylightName} = Encode::encode("UTF-16LE","DAYLNDAYLNDAYLNDAYLNDAYLNDAYLNDA");
+    $tzi->{DaylightDate}{wYear} = 1;
+    $tzi->{DaylightDate}{wMonth} = 2;
+    $tzi->{DaylightDate}{wDayOfWeek} = 3;
+    $tzi->{DaylightDate}{wDay} = 4;
+    $tzi->{DaylightDate}{wHour} = 5;
+    $tzi->{DaylightDate}{wMinute} = 6;
+    $tzi->{DaylightDate}{wSecond} = 7;
+    $tzi->{DaylightDate}{wMilliseconds} = 8;
+    $tzi->{DaylightBias} = 3;
+    $function = Win32::API::More->new(
+      $test_dll, 'DWORD WINAPI MySetTimeZoneInformation( LPTIME_ZONE_INFORMATION lpTimeZoneInformation );'
+    );
+    ok($function->Call($tzi), "MySetTimeZoneInformation call works");
+
+    #test partial (null truncation) strings in arrays inline in a struct CPAN #92971
+    Win32::API::Struct->typedef(ARR_IN_STRUCT => qw(
+    unsigned int first;
+    CHAR str [32];
+    unsigned int last;
+    ));
+    $function = Win32::API::More->new(
+      $test_dll, 'void __stdcall WriteArrayInStruct(ARR_IN_STRUCT* s)'
+    );
+    my $inlinearr = Win32::API::Struct->new('ARR_IN_STRUCT');
+    $function->Call($inlinearr);
+    ok($inlinearr->{first} == 0xFFFFFFFF, 'char inline array - member first');
+    ok($inlinearr->{str} eq "12345123451234512345", 'char inline array - member str');
+    ok($inlinearr->{last} == 0xFFFFFFFF, 'char inline array - member last');
+
+    Win32::API::Struct->typedef(WARR_IN_STRUCT => qw(
+    unsigned int first;
+    WCHAR str [32];
+    unsigned int last;
+    ));
+    $function = Win32::API::More->new(
+      $test_dll, 'void __stdcall WriteWArrayInStruct(WARR_IN_STRUCT* s)'
+    );
+    $inlinearr = Win32::API::Struct->new('WARR_IN_STRUCT');
+    $function->Call($inlinearr);
+    ok($inlinearr->{first} == 0xFFFFFFFF, 'wchar inline array - member first');
+    ok($inlinearr->{str} eq Encode::encode("UTF-16LE","12345123451234512345"), 'wchar inline array - member str');
+    ok($inlinearr->{last} == 0xFFFFFFFF, 'wchar inline array - member last');
+}
+{
+    my $s = "\x00\x00\x00\x00";
+    Win32::API::_TruncateToWideNull($s);
+    ok($s eq '', '_TruncateToWideNull just wide nulls');
+    $s = "A\x00B\x00";
+    Win32::API::_TruncateToWideNull($s);
+    ok($s eq "A\x00B\x00", '_TruncateToWideNull no wide nulls');
+    $s = '';
+    Win32::API::_TruncateToWideNull($s);
+    ok($s eq '', '_TruncateToWideNull empty string');
+    $s = "A\x00B\x00\x00\x00\x00\x00";
+    Win32::API::_TruncateToWideNull($s);
+    ok($s eq "A\x00B\x00", '_TruncateToWideNull extra wide nulls');
 }

@@ -4,6 +4,8 @@ History of Win32::API perl extension.
    - Fixed, VC 6 build broken due to C syntax error since v0.76_02
      http://git.io/vcZ08
    - Revised api-test for more binary diff stability between rebuilds
+   - Fixed, RT #92971, WCHAR array inside Struct.pm struct caused memory
+     corruption
 
 2015-05-26  Win32::API v0.82    bulk88
    - Fixed, missing MANIFEST entry caused GCC 32 bit builds to be broken

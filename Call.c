@@ -275,7 +275,7 @@ STATIC void Call_body(pTHX_ const APICONTROL * const control, unsigned int rt_fl
         //below is fastest on VC2003 + Intel Merom (Core 2)
         {
             void * end_ptr = (void *)param_len;
-            void * source_ptr = (size_t)&(control->param)+(size_t)param_len-16;
+            void * source_ptr = (void *)((size_t)&(control->param)+(size_t)param_len-16);
         __asm {
             mov eax, esp
             and al, 0F0h /* align esp to 16*/
