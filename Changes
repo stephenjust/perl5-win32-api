@@ -1,5 +1,12 @@
 History of Win32::API perl extension.
 
+2016-01-21  Win32::API v0.84    bulk88
+   - Fixed RT #80322, after around 8 executions of a Win32::API::Callback
+     callback in a process, all floating point math (x87 FPU state) was
+     corrupted which caused all FP math ops in PP and C later on to be NaNs or
+     other junk results, this lead to "basic math" being broken in pure perl
+     for some people or for me a crash in 03_Jim_Shaw.t
+
 2015-09-29  Win32::API v0.83_01    bulk88
    - Fixed, VC 6 build broken due to C syntax error since v0.76_02
      http://git.io/vcZ08

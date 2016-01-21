@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use vars qw( $VERSION $Stage2FuncPtrPkd );
 
-$VERSION = '0.83_01';
+$VERSION = '0.84';
 
 #require XSLoader;    # to dynuhlode the module. #already loaded by Win32::API
 #use Data::Dumper;
@@ -304,6 +304,7 @@ sub MakeCB{
     .("\xFF\xD0"#       call    eax
     #since ST(0) is volatile, we don't care if we fill it with garbage
     ."\x80\x7D\xFE\x00"#cmp    [ebp+FuncRtnCxtVar.F_Or_D], 0
+    ."\xDD\xD8"#       fstp    st(0) pop a FP reg to make space on FPU stack
     ."\x74\x05"#       jz      5 bytes
     ."\xDD\x45\xF4"#   fld     qword ptr [ebp+retval] (double)
     ."\xEB\x03"#       jmp     3 bytes
