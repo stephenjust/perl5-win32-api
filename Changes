@@ -1,5 +1,10 @@
 History of Win32::API perl extension.
 
+2016-05-10  Win32::API v0.85    bulk88
+   - Added support for building with gmake and Visual C.
+   - Added support for Math::Int64 objects put into a Win32::API::Struct obj
+     on 32 bit perls without quads
+
 2016-01-21  Win32::API v0.84    bulk88
    - Fixed RT #80322, after around 8 executions of a Win32::API::Callback
      callback in a process, all floating point math (x87 FPU state) was

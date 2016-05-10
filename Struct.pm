@@ -312,6 +312,20 @@ sub getPack {
                 push(@items, $structptr);
                 push(@buffer_ptrs, $structptr);
             }
+            elsif(Win32::API::Type::IVSIZE() == 4 && ($type eq 'q' || $type eq 'Q')){
+                if(#UseMI64 flag is a property of a wrapped C func, we dont have
+                   #the ::API obj available here due to existing API design so
+                   #we can't check the flag
+                   #$_[0]->UseMI64() ||
+                   ref($self->{$name})){ #un/signed meaningless
+                    $self->{$name} = Math::Int64::int64_to_native($self->{$name});
+                }
+                elsif(length($self->{$name}) < 8) {
+                    warn("Win32::API::Call value for 64 bit integer is under 8 bytes long");
+                }
+                $type = 'a8';
+                push(@items, $self->{$name});
+            }
             else {
                 push(@items, $self->{$name});
             }

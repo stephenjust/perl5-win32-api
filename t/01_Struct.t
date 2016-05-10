@@ -19,7 +19,7 @@ BEGIN {
     eval 'sub OPV () {'.$].'}';
     sub OPV();
 }
-plan tests => 50;
+plan tests => 51;
 
 use vars qw(
     $function
@@ -406,4 +406,20 @@ sub fillSYSTEMTIME {
     $s = "A\x00B\x00\x00\x00\x00\x00";
     Win32::API::_TruncateToWideNull($s);
     ok($s eq "A\x00B\x00", '_TruncateToWideNull extra wide nulls');
+}
+{
+    Win32::API::Struct->typedef(LQQSTRUCT => qw{
+    DWORD i32;
+    __int64 i64one;
+    __int64 i64two;
+    });
+    my $s = Win32::API::Struct->new('LQQSTRUCT');
+    $s->{i32} = 1;
+    $s->{i64one} = hex_to_int64("0x0000000000000002");
+    $s->{i64two} = "\x03\x00\x00\x00\x00\x00\x00\x00";
+    $s->Pack();
+    is($s->{buffer}, "\x01\x00\x00\x00\x00\x00\x00\x00"
+                    ."\x02\x00\x00\x00\x00\x00\x00\x00"
+                    ."\x03\x00\x00\x00\x00\x00\x00\x00",
+        "can not ::Struct::new a LP prefixed struct name for a defined struct");
 }

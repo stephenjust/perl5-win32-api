@@ -213,8 +213,7 @@ sub test {
 
 #b/c of this sub, distdir only runs on Cygwin, perm changes are for Kwalitee
 sub distdir {
-    my($self) = shift;
-    my $distdir_sec = $self->SUPER::distdir(@_);
+    my $distdir_sec = shift->SUPER::distdir(@_);
     #in newer perls we are patching create_distdir, in olders, distdir
     #see MM patch "6.25 alphas caused a Makefile to be added to the dist. Fixed. "
     my $repstartpos = index($distdir_sec,"\'\$(DIST_CP)\');\"");
@@ -225,6 +224,21 @@ sub distdir {
            ,"\'\$(DIST_CP)\');\" \\\n\t&& cd \$(DISTVNAME) && chmod -v -x-x-x Makefile.PL && chmod -v -x-x-x ./Callback/Makefile.PL"
            );
     return $distdir_sec;
+}
+
+
+sub special_targets {
+    my $st_sec = shift->SUPER::special_targets(@_);
+    #.asm isnt in EUMM's .SUFFIXES so gmake+VC wont build without passing .asm
+    #to .SUFFIXES so the .obj hets built from the .asm
+    my $ststartpos = index($st_sec,' .s ');
+    die 'special_targets cant match' if $ststartpos == -1;
+    substr($st_sec
+           ,$ststartpos
+           ,length(' .s ')
+           ,' .asm .s '
+           );
+    return $st_sec;
 }
 
 package main;
