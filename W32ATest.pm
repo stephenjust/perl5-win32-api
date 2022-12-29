@@ -16,6 +16,12 @@ sub is_perl_64bit () {
     return;
 }
 
+sub is_perl_arm64 () {
+    use Config;
+
+    return ($Config{archname} =~ /arm64/);
+}
+
 sub can_fork () {
     use Config;
 
@@ -88,7 +94,9 @@ sub find_test_dll {
     my $dll;
     my $test_dll_name =
         is_perl_64bit()
-        ? 'API_test64.dll'
+        ? (is_perl_arm64()
+            ? 'API_testarm64.dll'
+            : 'API_test64.dll')
         : 'API_test.dll';
 
     my $dll_name = $_[0] || $test_dll_name;
@@ -102,7 +110,9 @@ sub find_test_dll {
                 if ! Win32::API::LoadLibrary(
                     File::Spec->catfile($path,
                         is_perl_64bit()
-                        ? 'rtc64.dll'
+                        ? (is_perl_arm64()
+                            ? 'rtcarm64.dll'
+                            : 'rtc64.dll')
                         : 'rtc.dll'));
             return $dll;
         }

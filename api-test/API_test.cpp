@@ -51,6 +51,7 @@ extern "C" __declspec(selectany) DWORD _fltused = 0;
 #define toupper(x) (char)CharUpperA((LPTSTR)x)
 #define sprintf wsprintf
 
+#if _MSC_VER < 1900
 int printf(const char * format, ...)
 {
     char buf[1024];
@@ -68,6 +69,7 @@ int printf(const char * format, ...)
     /* not sure if ret is 100% accurate as real printf */
     return ret;
 }
+#endif
 
 /* know which VC version was used to build this DLL, helps in reproducibility
    and keeps git diff smallers when you use the same VC version */

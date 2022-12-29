@@ -191,6 +191,8 @@ STATIC void w32sv_setwstr(pTHX_ SV * sv, WCHAR *wstr, INT_PTR wlenparam) {
 #include "call_x86_64.h"
 #elif defined(_M_IX86) || defined(__i386)
 #include "call_i686.h"
+#elif defined(_M_ARM64) || defined(__aarch64__)
+#include "call_arm64.h"
 #else
 #error "Don't know what architecture I'm on."
 #endif

@@ -13,6 +13,7 @@ use Config;
 require './W32ATest.pm';
 
 my $is_64bit_build = ($Config{ptrsize} == 8);
+my $is_arm64_build = ($Config{archname} =~ /arm64/);
 my $is_msvc_compiler = ($Config{cc} =~ /cl/);
 
 #maybe this CC will banned in the future due to SEGV in DllMain
@@ -83,9 +84,12 @@ WriteMakefile1(
 
     (
         $is_64bit_build
-	    ? ( $is_msvc_compiler
-		    ? ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x64_msvc$(OBJ_EXT)' )
-		    : ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x64_gnu$(OBJ_EXT)' )
+	    ? ( $is_arm64_build
+            ? ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_arm64_gnu$(OBJ_EXT)' )
+            : ( $is_msvc_compiler
+                ? ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x64_msvc$(OBJ_EXT)' )
+                : ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x64_gnu$(OBJ_EXT)' )
+            )
 		)
 	    : ( $is_msvc_compiler
                     ? ( 'OBJECT' => '$(BASEEXT)$(OBJ_EXT) call_asm_x86_msvc$(OBJ_EXT)' )
